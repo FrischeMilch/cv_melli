@@ -235,6 +235,43 @@
   }
   .cv-foot .sig { font-family: var(--disp); font-weight: 800; font-size: 12.5pt; color: var(--ink); letter-spacing: -.01em; }
 
+  /* ---- Edit controls (add/delete rows & paragraphs) ---- */
+  .edit-add-btn, .edit-del-btn { display: none; }
+
+  body.editing .edit-add-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; border: none; background: transparent; cursor: pointer;
+    padding: 2px 0; margin: 0; position: relative; flex-shrink: 0;
+  }
+  body.editing .edit-add-btn::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: rgba(46,125,80,.3);
+  }
+  body.editing .edit-add-btn span {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--green); color: var(--green);
+    background: var(--paper); font-size: 13px; font-weight: 800;
+    line-height: 1; transition: all .15s;
+  }
+  body.editing .edit-add-btn:hover span { background: var(--green); color: #fff; }
+
+  body.editing .edit-del-btn {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 3px; right: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    border: none; background: rgba(200,0,0,.1); color: #c00;
+    font-size: 14px; cursor: pointer; line-height: 1;
+    transition: all .15s; padding: 0; z-index: 5;
+  }
+  body.editing .edit-del-btn:hover { background: #c00; color: #fff; }
+
+  .row { position: relative; }
+  .s-row { position: relative; }
+  #letter-paras p.body { position: relative; }
+  #letter-paras, #cv-werdegang-rows, #cv-kenntnisse-rows { display: flex; flex-direction: column; }
+
   /* ============ PRINT ============ */
   @page { size: A4; margin: 0; }
   @media print {
@@ -327,14 +364,16 @@
 
         <h3 class="l-subject" data-k="l-subject">Bewerbung um eine Praktikumsstelle als Kauffrau für Büromanagement (IHK) — Praktikumszeitraum 18.01.2021 bis 14.07.2022</h3>
 
-        <p class="body l-salut" data-k="l-salut">Sehr geehrter Herr Mack,</p>
-        <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück“ dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
-        <p class="body" data-k="l-p2">Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
-        <p class="body" data-k="l-p3">Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
-        <p class="body" data-k="l-p4">Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
-        <p class="body" data-k="l-p5">Über die Einladung zu einem persönlichen Gespräch freue ich mich sehr.</p>
+        <div id=”letter-paras”>
+          <p class=”body l-salut” data-k=”l-salut”>Sehr geehrter Herr Mack,</p>
+          <p class=”body” data-k=”l-p1”>seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück” dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
+          <p class=”body” data-k=”l-p2”>Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
+          <p class=”body” data-k=”l-p3”>Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
+          <p class=”body” data-k=”l-p4”>Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
+          <p class=”body” data-k=”l-p5”>Über die Einladung zu einem persönlichen Gespräch freue ich mich sehr.</p>
+        </div>
 
-        <div class="l-close">
+        <div class=”l-close”>
           <p class="gruss" data-k="l-gruss">Mit freundlichen Grüßen</p>
           <div class="l-sign" data-k="l-sign">Melanie Kerner</div>
         </div>
@@ -392,29 +431,33 @@
         <div class="main">
           <h2 class="h-big">Beruflicher Werdegang<span class="dot">.</span></h2>
 
-          <div class="row"><div class="when" data-k="w1">07.2022 — heute</div><div><div class="role" data-k="r1">Assistenz der Werkleitung, anschl. Vertriebsinnendienst</div><div class="org" data-k="o1">Tricor Packaging Systems GmbH, Neuburg</div></div></div>
-          <div class="row"><div class="when" data-k="w2">09.2019 — 06.2022</div><div><div class="role" data-k="r2">Umschulung zur Kauffrau für Büromanagement mit SAP (IHK-Abschluss)</div><div class="org" data-k="o2">DEKRA Akademie GmbH, Neuburg/Donau · inkl. 17 Monate Praktikum in Teilzeit</div></div></div>
-          <div class="row"><div class="when" data-k="w3">09.2018 — 08.2019</div><div><div class="role" data-k="r3">Ausbildung Steuerfachangestellte / Kauffrau für Büromanagement</div><div class="org" data-k="o3">Steuerkanzlei Schabmüller &amp; Lösel, Ingolstadt</div></div></div>
-          <div class="row"><div class="when" data-k="w4">03.2018 — 08.2018</div><div><div class="role" data-k="r4">Mitarbeiterin Verkauf (Teilzeit)</div><div class="org" data-k="o4">Ernstings Family GmbH &amp; Co. KG, Ingolstadt</div></div></div>
-          <div class="row"><div class="when" data-k="w5">08.2013 — 02.2018</div><div><div class="role" data-k="r5">Mitarbeiterin Verkauf &amp; Filialleitung</div><div class="org" data-k="o5">NKD Deutschland GmbH, Ingolstadt</div>
-            <ul class="tasks">
-              <li data-k="t1">Kundenberatung</li>
-              <li data-k="t2">Warenpräsentation</li>
-              <li data-k="t3">Wareneingang &amp; Lieferscheine</li>
-              <li data-k="t4">Kasse, Tresor &amp; Abrechnung</li>
-              <li data-k="t5">Inventur</li>
-              <li data-k="t6">Mitarbeitereinsatzplanung</li>
-            </ul>
-          </div></div>
-          <div class="row"><div class="when" data-k="w6">11.2011 — 05.2012</div><div><div class="role" data-k="r6">Pflegehilfskraft (Teilzeit)</div><div class="org" data-k="o6">Sonnen Team, Neuburg</div></div></div>
-          <div class="row"><div class="when" data-k="w7">04.2006 — 11.2007</div><div><div class="role" data-k="r7">Aushilfe im Verkauf</div><div class="org" data-k="o7">ROFU Kinderland, Neuburg an der Donau</div></div></div>
-          <div class="row"><div class="when" data-k="w8">08.1998 — 09.2005</div><div><div class="role" data-k="r8">Häusliche Pflegekraft</div><div class="org" data-k="o8">Privater Haushalt (Großeltern)</div></div></div>
+          <div id="cv-werdegang-rows">
+            <div class="row"><div class="when" data-k="w1">07.2022 — heute</div><div><div class="role" data-k="r1">Assistenz der Werkleitung, anschl. Vertriebsinnendienst</div><div class="org" data-k="o1">Tricor Packaging Systems GmbH, Neuburg</div></div></div>
+            <div class="row"><div class="when" data-k="w2">09.2019 — 06.2022</div><div><div class="role" data-k="r2">Umschulung zur Kauffrau für Büromanagement mit SAP (IHK-Abschluss)</div><div class="org" data-k="o2">DEKRA Akademie GmbH, Neuburg/Donau · inkl. 17 Monate Praktikum in Teilzeit</div></div></div>
+            <div class="row"><div class="when" data-k="w3">09.2018 — 08.2019</div><div><div class="role" data-k="r3">Ausbildung Steuerfachangestellte / Kauffrau für Büromanagement</div><div class="org" data-k="o3">Steuerkanzlei Schabmüller &amp; Lösel, Ingolstadt</div></div></div>
+            <div class="row"><div class="when" data-k="w4">03.2018 — 08.2018</div><div><div class="role" data-k="r4">Mitarbeiterin Verkauf (Teilzeit)</div><div class="org" data-k="o4">Ernstings Family GmbH &amp; Co. KG, Ingolstadt</div></div></div>
+            <div class="row"><div class="when" data-k="w5">08.2013 — 02.2018</div><div><div class="role" data-k="r5">Mitarbeiterin Verkauf &amp; Filialleitung</div><div class="org" data-k="o5">NKD Deutschland GmbH, Ingolstadt</div>
+              <ul class="tasks">
+                <li data-k="t1">Kundenberatung</li>
+                <li data-k="t2">Warenpräsentation</li>
+                <li data-k="t3">Wareneingang &amp; Lieferscheine</li>
+                <li data-k="t4">Kasse, Tresor &amp; Abrechnung</li>
+                <li data-k="t5">Inventur</li>
+                <li data-k="t6">Mitarbeitereinsatzplanung</li>
+              </ul>
+            </div></div>
+            <div class="row"><div class="when" data-k="w6">11.2011 — 05.2012</div><div><div class="role" data-k="r6">Pflegehilfskraft (Teilzeit)</div><div class="org" data-k="o6">Sonnen Team, Neuburg</div></div></div>
+            <div class="row"><div class="when" data-k="w7">04.2006 — 11.2007</div><div><div class="role" data-k="r7">Aushilfe im Verkauf</div><div class="org" data-k="o7">ROFU Kinderland, Neuburg an der Donau</div></div></div>
+            <div class="row"><div class="when" data-k="w8">08.1998 — 09.2005</div><div><div class="role" data-k="r8">Häusliche Pflegekraft</div><div class="org" data-k="o8">Privater Haushalt (Großeltern)</div></div></div>
+          </div>
 
           <h2 class="h-big mt">Kenntnisse<span class="dot">.</span></h2>
-          <div class="row"><div class="when">EDV</div><div><div class="role" data-k="q1">MS Office (Word, Excel, PowerPoint) · SAP · Internet</div></div></div>
-          <div class="row"><div class="when">Sprachen</div><div><div class="role" data-k="q2">Deutsch (Muttersprache) · Englisch (Grundkenntnisse)</div></div></div>
-          <div class="row"><div class="when">Führerschein</div><div><div class="role" data-k="q3">Klasse B</div></div></div>
-          <div class="row"><div class="when">Weiterbildung</div><div><div class="role" data-k="q4">Grundseminar Sicherheitsbeauftragte für Büro &amp; Verwaltung</div><div class="org" data-k="q4o">Berufsgenossenschaft (BG), Augsburg</div></div></div>
+          <div id="cv-kenntnisse-rows">
+            <div class="row"><div class="when" data-k="qw1">EDV</div><div><div class="role" data-k="q1">MS Office (Word, Excel, PowerPoint) · SAP · Internet</div></div></div>
+            <div class="row"><div class="when" data-k="qw2">Sprachen</div><div><div class="role" data-k="q2">Deutsch (Muttersprache) · Englisch (Grundkenntnisse)</div></div></div>
+            <div class="row"><div class="when" data-k="qw3">Führerschein</div><div><div class="role" data-k="q3">Klasse B</div></div></div>
+            <div class="row"><div class="when" data-k="qw4">Weiterbildung</div><div><div class="role" data-k="q4">Grundseminar Sicherheitsbeauftragte für Büro &amp; Verwaltung</div><div class="org" data-k="q4o">Berufsgenossenschaft (BG), Augsburg</div></div></div>
+          </div>
 
           <div class="cv-foot">
             <span data-k="cv-place">Weichering, 23.07.2025</span>
@@ -427,38 +470,255 @@
   </div>
 
   <script>
-    (function () {
-      var KEY = 'bewerbung-edits-v3';
-      var editables = Array.prototype.slice.call(document.querySelectorAll('[data-k]'));
-      var store = {};
-      try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
-      editables.forEach(function (el) {
-        if (store[el.dataset.k] != null) el.innerHTML = store[el.dataset.k];
+  (function () {
+    var STORE_KEY = 'bewerbung-edits-v4';
+    var store = {};
+    var editing = false;
+    var dynId = Date.now();
+    function nextId() { return 'dyn' + (++dynId); }
+
+    try { store = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) {}
+
+    // Structural section IDs (innerHTML saved/restored as a unit)
+    var STRUCT_IDS = ['letter-paras', 'cv-werdegang-rows', 'cv-kenntnisse-rows'];
+
+    // Restore structural sections first
+    STRUCT_IDS.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && store['__s__' + id]) el.innerHTML = store['__s__' + id];
+    });
+
+    // Sidebar sections: store key in dataset before innerHTML restore
+    var sideSecs = Array.from(document.querySelectorAll('.side .sec'));
+    sideSecs.forEach(function (sec) {
+      var lbl = sec.querySelector('.boxlabel');
+      var key = '__side__' + (lbl ? lbl.textContent.trim() : Math.random().toString(36).slice(2));
+      sec.dataset.secKey = key;
+      if (store[key]) sec.innerHTML = store[key];
+    });
+
+    // Fixed fields (not inside structural containers)
+    function isInStructural(el) {
+      return el.closest('#letter-paras') ||
+             el.closest('#cv-werdegang-rows') ||
+             el.closest('#cv-kenntnisse-rows') ||
+             el.closest('.side .sec');
+    }
+    function fixedEditables() {
+      return Array.from(document.querySelectorAll('[data-k]')).filter(function (el) { return !isInStructural(el); });
+    }
+    fixedEditables().forEach(function (el) {
+      if (store[el.dataset.k] != null) el.innerHTML = store[el.dataset.k];
+    });
+
+    // ---- Save ----
+    function save() {
+      STRUCT_IDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var clone = el.cloneNode(true);
+        clone.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+        store['__s__' + id] = clone.innerHTML;
       });
-      function save() {
-        var o = {};
-        editables.forEach(function (el) { o[el.dataset.k] = el.innerHTML; });
-        try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+      sideSecs.forEach(function (sec) {
+        var clone = sec.cloneNode(true);
+        clone.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+        store[sec.dataset.secKey] = clone.innerHTML;
+      });
+      fixedEditables().forEach(function (el) { store[el.dataset.k] = el.innerHTML; });
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {}
+    }
+
+    // ---- Edit button factories ----
+    function makeAddBtn(onClick) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'edit-add-btn';
+      btn.innerHTML = '<span>+</span>';
+      btn.addEventListener('click', onClick);
+      return btn;
+    }
+    function makeDelBtn(onClick) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'edit-del-btn';
+      btn.textContent = '×'; btn.title = 'Löschen';
+      btn.addEventListener('click', onClick);
+      return btn;
+    }
+    function focusEl(el) {
+      if (!el) return;
+      el.focus();
+      try {
+        var r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      } catch (e) {}
+    }
+    function setEditableInEl(el, on) {
+      el.querySelectorAll('[data-k]').forEach(function (e) { e.contentEditable = on ? 'true' : 'false'; });
+    }
+
+    // ---- Letter paragraphs ----
+    function refreshLetterControls() {
+      var c = document.getElementById('letter-paras');
+      if (!c) return;
+      c.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+      var salut = c.querySelector('p.l-salut');
+      var paras = Array.from(c.querySelectorAll('p.body:not(.l-salut)'));
+
+      function addParaBefore(refBtn) {
+        var p = document.createElement('p');
+        p.className = 'body'; p.dataset.k = 'l-' + nextId();
+        p.contentEditable = editing ? 'true' : 'false';
+        p.textContent = 'Neuer Absatz …';
+        c.insertBefore(p, refBtn);
+        refreshLetterControls(); save(); focusEl(p);
       }
-      var editing = false;
-      var btnEdit = document.getElementById('btnEdit');
-      var btnPdf = document.getElementById('btnPdf');
-      function setEditing(on) {
-        editing = on;
-        document.body.classList.toggle('editing', on);
-        editables.forEach(function (el) { el.contentEditable = on ? 'true' : 'false'; });
-        btnEdit.classList.toggle('active', on);
-        btnEdit.innerHTML = on ? '✓ Fertig' : '✎ Bearbeiten';
+
+      if (salut) {
+        var addAfterSalut = makeAddBtn(function () { addParaBefore(addAfterSalut); });
+        salut.after(addAfterSalut);
       }
-      btnEdit.addEventListener('click', function () { setEditing(!editing); });
-      document.addEventListener('input', function (e) {
-        if (e.target.closest && e.target.closest('[data-k]')) save();
+      paras.forEach(function (p) {
+        p.style.paddingRight = '22px';
+        var del = makeDelBtn(function () { p.remove(); refreshLetterControls(); save(); });
+        p.appendChild(del);
+        var addAfter = makeAddBtn(function () { addParaBefore(addAfter); });
+        p.after(addAfter);
       });
-      btnPdf.addEventListener('click', function () {
-        if (editing) setEditing(false);
-        setTimeout(function () { window.print(); }, 60);
-      });
-    })();
+    }
+
+    // ---- Generic row-section controls ----
+    function refreshRowControls(containerId, newRowFn) {
+      var c = document.getElementById(containerId);
+      if (!c) return;
+      c.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+      var rows = Array.from(c.querySelectorAll('.row'));
+
+      function addRowBefore(refBtn) {
+        var row = newRowFn(); c.insertBefore(row, refBtn);
+        setEditableInEl(row, editing);
+        refreshRowControls(containerId, newRowFn); save();
+        focusEl(row.querySelector('[data-k]'));
+      }
+
+      if (rows.length === 0) {
+        var addEmpty = makeAddBtn(function () { addRowBefore(addEmpty); });
+        c.appendChild(addEmpty);
+      } else {
+        var addFirst = makeAddBtn(function () { addRowBefore(addFirst); });
+        c.insertBefore(addFirst, rows[0]);
+        rows.forEach(function (row) {
+          var del = makeDelBtn(function () { row.remove(); refreshRowControls(containerId, newRowFn); save(); });
+          row.appendChild(del);
+          var addAfter = makeAddBtn(function () { addRowBefore(addAfter); });
+          row.after(addAfter);
+        });
+      }
+    }
+
+    function newWerdegangRow() {
+      var id = nextId();
+      var d = document.createElement('div'); d.className = 'row';
+      d.innerHTML = '<div class="when" data-k="w-' + id + '">Zeitraum</div>' +
+        '<div><div class="role" data-k="r-' + id + '">Position / Tätigkeit</div>' +
+        '<div class="org" data-k="o-' + id + '">Organisation, Ort</div></div>';
+      return d;
+    }
+    function newKenntnisseRow() {
+      var id = nextId();
+      var d = document.createElement('div'); d.className = 'row';
+      d.innerHTML = '<div class="when" data-k="qw-' + id + '">Kategorie</div>' +
+        '<div><div class="role" data-k="qv-' + id + '">Inhalt</div></div>';
+      return d;
+    }
+
+    // ---- Sidebar section controls ----
+    function refreshSideSecControls(sec) {
+      sec.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+      var blist = sec.querySelector('.blist');
+      var boxlabel = sec.querySelector('.boxlabel');
+
+      if (blist) {
+        // Stärken-style: list items
+        var items = Array.from(blist.querySelectorAll('li'));
+        function addLiBefore(refBtn) {
+          var li = document.createElement('li');
+          li.dataset.k = 'li-' + nextId(); li.contentEditable = editing ? 'true' : 'false';
+          li.textContent = 'Neue Stärke …';
+          blist.insertBefore(li, refBtn); refreshSideSecControls(sec); save(); focusEl(li);
+        }
+        if (items.length === 0) {
+          var addE = makeAddBtn(function () { addLiBefore(addE); }); blist.appendChild(addE);
+        } else {
+          var addF = makeAddBtn(function () { addLiBefore(addF); }); blist.insertBefore(addF, items[0]);
+          items.forEach(function (li) {
+            li.style.paddingRight = '22px'; li.style.position = 'relative';
+            var del = makeDelBtn(function () { li.remove(); refreshSideSecControls(sec); save(); });
+            li.appendChild(del);
+            var addA = makeAddBtn(function () { addLiBefore(addA); }); li.after(addA);
+          });
+        }
+      } else {
+        // s-row style: Kontakt / Persönliche Daten
+        var sRows = Array.from(sec.querySelectorAll('.s-row'));
+        var insertRef = boxlabel ? boxlabel.nextSibling : sec.firstChild;
+        function addSRowBefore(refBtn) {
+          var id = nextId();
+          var div = document.createElement('div'); div.className = 's-row';
+          div.innerHTML = '<div class="s-k" data-k="sk-' + id + '">Label</div>' +
+                          '<div class="s-v" data-k="sv-' + id + '">Wert</div>';
+          sec.insertBefore(div, refBtn); setEditableInEl(div, editing);
+          refreshSideSecControls(sec); save(); focusEl(div.querySelector('[data-k]'));
+        }
+        if (sRows.length === 0) {
+          var addSE = makeAddBtn(function () { addSRowBefore(addSE); }); sec.insertBefore(addSE, insertRef);
+        } else {
+          var addSF = makeAddBtn(function () { addSRowBefore(addSF); }); sec.insertBefore(addSF, sRows[0]);
+          sRows.forEach(function (sr) {
+            var del = makeDelBtn(function () { sr.remove(); refreshSideSecControls(sec); save(); });
+            sr.appendChild(del);
+            var addA = makeAddBtn(function () { addSRowBefore(addA); }); sr.after(addA);
+          });
+        }
+      }
+    }
+
+    // ---- Inject / remove all controls ----
+    function injectAllControls() {
+      refreshLetterControls();
+      refreshRowControls('cv-werdegang-rows', newWerdegangRow);
+      refreshRowControls('cv-kenntnisse-rows', newKenntnisseRow);
+      sideSecs.forEach(refreshSideSecControls);
+    }
+    function removeEditControls() {
+      document.querySelectorAll('.edit-add-btn, .edit-del-btn').forEach(function (b) { b.remove(); });
+      document.querySelectorAll('#letter-paras p.body').forEach(function (p) { p.style.paddingRight = ''; });
+      document.querySelectorAll('.side .sec li').forEach(function (li) { li.style.paddingRight = ''; li.style.position = ''; });
+    }
+
+    // ---- Edit mode ----
+    var btnEdit = document.getElementById('btnEdit');
+    var btnPdf = document.getElementById('btnPdf');
+
+    function setEditing(on) {
+      editing = on;
+      document.body.classList.toggle('editing', on);
+      fixedEditables().forEach(function (el) { el.contentEditable = on ? 'true' : 'false'; });
+      document.querySelectorAll('#letter-paras [data-k], #cv-werdegang-rows [data-k], #cv-kenntnisse-rows [data-k], .side .sec [data-k]')
+        .forEach(function (el) { el.contentEditable = on ? 'true' : 'false'; });
+      btnEdit.classList.toggle('active', on);
+      btnEdit.innerHTML = on ? '✓ Fertig' : '✎ Bearbeiten';
+      if (on) { injectAllControls(); } else { removeEditControls(); save(); }
+    }
+
+    btnEdit.addEventListener('click', function () { setEditing(!editing); });
+    document.addEventListener('input', function (e) {
+      if (e.target.closest && e.target.closest('[data-k]')) save();
+    });
+    btnPdf.addEventListener('click', function () {
+      if (editing) setEditing(false);
+      setTimeout(function () { window.print(); }, 60);
+    });
+  })();
   </script>
 </body>
 </html>
