@@ -636,7 +636,7 @@
     loadSaved();
     sanitizeHTML(workspace);
 
-    // Show publish timestamp if available
+    // Show publish timestamp — permanently visible
     var publishStatusEl = document.getElementById('publishStatus');
     function showPublishDate(ts) {
       if (!publishStatusEl || !ts) return;
@@ -646,10 +646,15 @@
         pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() +
         ' um ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' Uhr';
       publishStatusEl.classList.add('visible');
+      try { localStorage.setItem('bw-publish-ts', String(ts)); } catch (e) {}
     }
     (function () {
       var meta = document.querySelector('meta[name="publish-date"]');
-      if (meta) showPublishDate(parseInt(meta.getAttribute('content'), 10));
+      var metaTs = meta ? parseInt(meta.getAttribute('content'), 10) || 0 : 0;
+      var localTs = 0;
+      try { localTs = parseInt(localStorage.getItem('bw-publish-ts'), 10) || 0; } catch (e) {}
+      var bestTs = Math.max(metaTs, localTs);
+      if (bestTs) showPublishDate(bestTs);
     })();
 
     /* ============================================================
