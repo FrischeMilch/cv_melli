@@ -1144,6 +1144,10 @@
       workspace.querySelectorAll('[data-k]').forEach(function (el) {
         el.contentEditable = on ? 'true' : 'false';
       });
+      workspace.querySelectorAll('image-slot').forEach(function (slot) {
+        if (on) slot.removeAttribute('readonly');
+        else slot.setAttribute('readonly', '');
+      });
       if (on) {
         getPageWraps().forEach(activatePageWrap);
         rebuildAddZones();
@@ -1194,6 +1198,11 @@
     // Wire existing page wraps (for delete + side toggle) on initial load
     // (runs after loadSaved so restored HTML is also wired)
     getPageWraps().forEach(wirePageWrap);
+
+    // Image slots are readonly by default (require edit mode to change)
+    workspace.querySelectorAll('image-slot').forEach(function (slot) {
+      slot.setAttribute('readonly', '');
+    });
 
     /* ============================================================
        GitHub Pages Publish
@@ -1278,6 +1287,9 @@
         embedScript.textContent = JSON.stringify(imgStore);
         cloneBody.appendChild(embedScript);
       }
+
+      // Ensure image slots are readonly in published HTML
+      clone.querySelectorAll('image-slot').forEach(function (s) { s.setAttribute('readonly', ''); });
 
       // Reset overlay state
       var ov = clone.querySelector('#pw-overlay');

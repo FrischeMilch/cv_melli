@@ -75,6 +75,7 @@
         <style>
           :host { display:block; position:relative; overflow:hidden;
                   cursor:pointer; user-select:none; -webkit-user-select:none; }
+          :host([readonly]) { cursor:default; }
           .bg   { position:absolute; inset:0; display:flex; align-items:center;
                   justify-content:center; flex-direction:column; gap:6px;
                   background:#e8e4da; color:#9a978c;
@@ -96,6 +97,8 @@
                     transition:opacity .2s; z-index:2; }
           .change-btn:hover { background:rgba(0,0,0,.75); }
           :host(:hover) .change-btn.visible { opacity:1; }
+          :host([readonly]) .change-btn { display:none; }
+          :host([readonly]) .badge { display:none; }
         </style>
         <div class="bg">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -234,13 +237,12 @@
 
     // ── events ─────────────────────────────────────────────────────────────────
     _bindEvents () {
-      if (this.readonly) return;
-
       const handle = this._handle;
 
       // ── drag-and-drop ──
-      this.addEventListener('dragover',  e => e.preventDefault());
+      this.addEventListener('dragover',  e => { if (!this.readonly) e.preventDefault(); });
       this.addEventListener('drop', async e => {
+        if (this.readonly) return;
         e.preventDefault();
         const file = e.dataTransfer?.files?.[0];
         if (file && file.type.startsWith('image/')) await this._loadFile(file);
@@ -248,18 +250,21 @@
 
       // ── click-to-open ──
       handle.addEventListener('click', () => {
+        if (this.readonly) return;
         if (this._adjusting) { this._adjusting = false; return; }
         if (!this._src) this._openPicker();
       });
 
       // ── change button ──
       this._changeBtn.addEventListener('click', e => {
+        if (this.readonly) return;
         e.stopPropagation();
         this._openPicker();
       });
 
       // ── double-click → adjust mode ──
       handle.addEventListener('dblclick', e => {
+        if (this.readonly) return;
         e.stopPropagation();
         if (!this._src) return;
         this._adjusting = !this._adjusting;
@@ -270,7 +275,7 @@
 
       // ── pointer drag (adjust) ──
       handle.addEventListener('pointerdown', e => {
-        if (!this._adjusting || !this._src) return;
+        if (this.readonly || !this._adjusting || !this._src) return;
         this._drag = { x: e.clientX, y: e.clientY, ox: this._ox, oy: this._oy };
         handle.setPointerCapture(e.pointerId);
       });
@@ -292,7 +297,7 @@
 
       // ── wheel zoom ──
       this.addEventListener('wheel', e => {
-        if (!this._adjusting || !this._src) return;
+        if (this.readonly || !this._adjusting || !this._src) return;
         e.preventDefault();
         this._zoom = clamp(this._zoom * (e.deltaY < 0 ? 1.08 : 0.92), 0.5, 5);
         this._render();
