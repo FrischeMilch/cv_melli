@@ -290,30 +290,67 @@
 
   /* ---- Mobile ---- */
   @media (max-width: 700px) {
-    :root { --page-w: 100vw; --pad: 5mm; --gap: 4mm; }
-    .workspace { padding: 72px 0 32px; gap: 0; }
+    :root { --page-w: 100%; --pad: 4vw; --gap: 3vw; }
+    html, body { overflow-x: hidden; }
+    .workspace { padding: 64px 0 32px; gap: 0; }
     .page-wrap { width: 100%; margin-bottom: 8px; }
     .page {
       width: 100% !important; min-height: unset !important; height: auto !important;
+      overflow: visible !important;
       border-radius: 0; box-shadow: none;
       padding: var(--pad);
-      font-size: 9pt;
     }
-    /* Toolbar: scrollable row on small screens */
+
+    /* Toolbar */
     .toolbar {
-      top: 8px; left: 8px; right: 8px; transform: none;
-      width: auto; max-width: 100%;
+      top: 0; left: 0; right: 0; transform: none;
+      width: 100%; max-width: 100%;
       overflow-x: auto; flex-wrap: nowrap;
       padding: 6px 10px;
-      border-radius: 14px;
+      border-radius: 0;
     }
     .toolbar .tb-brand { display: none; }
-    .toolbar button { font-size: 11px; padding: 6px 10px; }
+    .toolbar button { font-size: 11px; padding: 6px 10px; flex-shrink: 0; }
+
     /* Password card */
-    .pw-card { width: calc(100vw - 32px); padding: 24px 20px; }
+    .pw-card { width: calc(100vw - 32px); max-width: 320px; padding: 24px 20px; }
+
     /* Editing hint */
     .editing-hint { font-size: 10px; left: 8px; right: 8px; transform: none;
       text-align: center; white-space: normal; width: auto; }
+
+    /* Deckblatt: stack grid vertically */
+    .cover-grid { grid-template-columns: 1fr !important; gap: 6vw; margin-top: 4vw; }
+    .cover-right { order: -1; display: grid; grid-template-columns: 40% 1fr; gap: 4vw; align-items: start; }
+    .who { margin-top: 0; }
+    .big { font-size: 22pt; margin-top: 3vw; }
+    .rule-row { margin-top: 2vw; }
+    .hd-top { flex-direction: column; gap: 2vw; }
+    .hd-addr { text-align: left; }
+    .cover-sub { font-size: 10pt; }
+    .inhalt li { font-size: 10pt; }
+
+    /* Anschreiben */
+    .l-addr { flex-direction: column; gap: 3vw; }
+    .l-date { padding-top: 0; }
+    .l-subject { font-size: 12pt; }
+
+    /* Lebenslauf: stack sidebar above main */
+    .cv-grid { grid-template-columns: 1fr !important; gap: 4vw; margin-top: 4vw; }
+    .side { display: grid !important; grid-template-columns: 35% 1fr; gap: 4vw; align-items: start; }
+    .side-photo { margin-bottom: 0; }
+    .side .sec:first-of-type { grid-column: 1 / -1; display: none; }
+    .row { grid-template-columns: 1fr; gap: 1vw; }
+    .when { margin-bottom: 0; }
+    .tasks { columns: 1; }
+    .cv-foot { flex-direction: column; gap: 2vw; align-items: flex-start; }
+
+    /* Skills rows */
+    .row.skill-row { grid-template-columns: 1fr; }
+
+    /* General text sizing for readability */
+    .tag { font-size: 8pt; }
+    .h-big { font-size: 13pt; }
   }
 
   /* ---- Print ---- */
