@@ -289,7 +289,7 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
     html, body { background: #fff; }
-    .toolbar, .editing-hint, #pw-overlay { display: none !important; }
+    .toolbar, .editing-hint, #pw-overlay, #btnPublish, #btnReset { display: none !important; }
     .workspace { gap: 0; padding: 0; }
     .page-wrap { margin-bottom: 0; }
     .page { box-shadow: none; break-after: page; height: var(--page-h) !important;
@@ -331,6 +331,7 @@
     <span class="tb-brand">Bewerbung</span>
     <button id="btnEdit">✎ Bearbeiten</button>
     <button id="btnReset" class="danger" title="Alle Änderungen zurücksetzen">↺ Reset</button>
+    <button id="btnPublish">↑ Veröffentlichen</button>
     <button id="btnPdf" class="primary">↓ Als PDF speichern</button>
   </div>
   <div class="editing-hint">Bearbeitungsmodus — Texte anklicken · + Zeilen/Absätze hinzufügen · × löschen</div>
@@ -540,9 +541,13 @@
         overlay.classList.add('hidden');
         pwError.classList.remove('show');
         pwInput.value = '';
-        // Merken für diese Session
         sessionStorage.setItem('bw-auth', '1');
-        setEditing(true);
+        if (sessionStorage.getItem('bw-pending-publish')) {
+          sessionStorage.removeItem('bw-pending-publish');
+          publishToGitHub();
+        } else {
+          setEditing(true);
+        }
       } else {
         pwError.classList.add('show');
         pwInput.focus();
@@ -992,6 +997,128 @@
     // Wire existing page wraps (for delete + side toggle) on initial load
     // (runs after loadSaved so restored HTML is also wired)
     getPageWraps().forEach(wirePageWrap);
+
+    /* ============================================================
+       GitHub Pages Publish
+       ============================================================ */
+    var PUBLISH_OWNER = 'FrischeMilch';
+    var PUBLISH_REPO  = 'cv_melli';
+    var PUBLISH_FILE  = 'index.html';
+    var PUBLISH_BRANCH = 'main';
+
+    function buildPublishHTML() {
+      // Temporarily pull edit controls out of DOM so clone is clean
+      var toRemove = Array.from(document.querySelectorAll('.ec-add,.ec-del,.row-del-wrap,.page-add-zone'));
+      var saved = toRemove.map(function (n) { return { el: n, parent: n.parentNode, next: n.nextSibling }; });
+      toRemove.forEach(function (n) { n.remove(); });
+
+      var clone = document.documentElement.cloneNode(true);
+
+      // Restore controls to live DOM
+      saved.forEach(function (s) { if (s.parent) s.parent.insertBefore(s.el, s.next); });
+
+      // Clean clone
+      clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
+
+      // Reset overlay state
+      var ov = clone.querySelector('#pw-overlay');
+      if (ov) ov.classList.add('hidden');
+      var pwi = clone.querySelector('#pw-input');
+      if (pwi) pwi.value = '';
+      var pwe = clone.querySelector('#pw-error');
+      if (pwe) pwe.classList.remove('show');
+
+      // Publish button must not show "loading" state
+      var pb = clone.querySelector('#btnPublish');
+      if (pb) { pb.textContent = '↑ Veröffentlichen'; pb.disabled = false; pb.removeAttribute('style'); }
+
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    async function publishToGitHub() {
+      // Require auth
+      if (!sessionStorage.getItem('bw-auth')) {
+        overlay.classList.remove('hidden');
+        setTimeout(function () { pwInput.focus(); }, 50);
+        // Set a flag so after password success we trigger publish
+        sessionStorage.setItem('bw-pending-publish', '1');
+        return;
+      }
+
+      var pat = localStorage.getItem('bw-gh-token');
+      if (!pat) {
+        pat = prompt('GitHub Personal Access Token eingeben:\n(wird nur lokal gespeichert, nie hochgeladen)');
+        if (!pat) return;
+        localStorage.setItem('bw-gh-token', pat.trim());
+        pat = pat.trim();
+      }
+
+      var btn = document.getElementById('btnPublish');
+      btn.textContent = '⏳ Wird hochgeladen…';
+      btn.disabled = true;
+
+      try {
+        if (editing) setEditing(false);
+        var html = buildPublishHTML();
+        var API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO +
+                  '/contents/' + PUBLISH_FILE;
+
+        // Get current SHA (file may not exist yet)
+        var r1 = await fetch(API + '?ref=' + PUBLISH_BRANCH, {
+          headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' }
+        });
+        var sha = null;
+        if (r1.ok) {
+          sha = (await r1.json()).sha;
+        } else if (r1.status === 401) {
+          localStorage.removeItem('bw-gh-token');
+          throw new Error('Token ungültig oder abgelaufen. Bitte neu eingeben.');
+        } else if (r1.status !== 404) {
+          throw new Error('GitHub API Fehler: ' + r1.status);
+        }
+
+        // UTF-8 → base64 (handles German umlauts)
+        var encoded = btoa(unescape(encodeURIComponent(html)));
+
+        var body = {
+          message: 'Bewerbung aktualisiert (' + new Date().toLocaleDateString('de-DE') + ')',
+          content: encoded,
+          branch: PUBLISH_BRANCH
+        };
+        if (sha) body.sha = sha;
+
+        var r2 = await fetch(API, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + pat,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!r2.ok) {
+          var errData = await r2.json();
+          if (r2.status === 401) localStorage.removeItem('bw-gh-token');
+          throw new Error(errData.message || 'HTTP ' + r2.status);
+        }
+
+        btn.textContent = '✓ Veröffentlicht!';
+        btn.style.cssText = 'background:var(--green);color:#fff;border-color:var(--green)';
+        setTimeout(function () {
+          btn.textContent = '↑ Veröffentlichen';
+          btn.disabled = false;
+          btn.style.cssText = '';
+        }, 4000);
+
+      } catch (e) {
+        alert('Fehler beim Veröffentlichen:\n' + e.message);
+        btn.textContent = '↑ Veröffentlichen';
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('btnPublish').addEventListener('click', publishToGitHub);
 
   })();
   </script>
