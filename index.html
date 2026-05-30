@@ -288,32 +288,36 @@
   .row-del-wrap { display: none; grid-column: 1 / -1; }
   body.editing .row-del-wrap { display: flex; padding-bottom: 2px; }
 
-  /* ---- Mobile ---- */
+  /* ---- Mobile: Seiten werden per JS auf Viewport skaliert ---- */
   @media (max-width: 700px) {
-    :root { --page-w: 100vw; --pad: 5mm; --gap: 4mm; }
-    .workspace { padding: 72px 0 32px; gap: 0; }
-    .page-wrap { width: 100%; margin-bottom: 8px; }
-    .page {
-      width: 100% !important; min-height: unset !important; height: auto !important;
-      border-radius: 0; box-shadow: none;
-      padding: var(--pad);
-      font-size: 9pt;
-    }
-    /* Toolbar: scrollable row on small screens */
+    html, body { overflow-x: hidden; }
+
+    /* Toolbar: volle Breite, umbrechen */
     .toolbar {
-      top: 8px; left: 8px; right: 8px; transform: none;
-      width: auto; max-width: 100%;
-      overflow-x: auto; flex-wrap: nowrap;
-      padding: 6px 10px;
-      border-radius: 14px;
+      top: 0; left: 0; right: 0; transform: none;
+      width: 100%; max-width: 100%;
+      flex-wrap: wrap; gap: 4px;
+      padding: 6px 8px;
+      border-radius: 0;
+      justify-content: flex-start;
     }
     .toolbar .tb-brand { display: none; }
-    .toolbar button { font-size: 11px; padding: 6px 10px; }
-    /* Password card */
-    .pw-card { width: calc(100vw - 32px); padding: 24px 20px; }
+    .toolbar button { font-size: 11px; padding: 5px 9px; flex-shrink: 0; }
+
+    /* Workspace: Platz für Toolbar */
+    .workspace { padding-top: 62px; }
+
+    /* page-wrap: transform-origin für scale() */
+    .page-wrap { transform-origin: top left; align-items: flex-start; }
+
+    /* Passwort-Dialog */
+    .pw-card { width: calc(100vw - 32px); max-width: 320px; padding: 24px 20px; }
+
     /* Editing hint */
-    .editing-hint { font-size: 10px; left: 8px; right: 8px; transform: none;
-      text-align: center; white-space: normal; width: auto; }
+    .editing-hint {
+      font-size: 10px; left: 8px; right: 8px; transform: none;
+      text-align: center; white-space: normal; width: auto;
+    }
   }
 
   /* ---- Print ---- */
@@ -1244,6 +1248,51 @@
 
     document.getElementById('btnPublish').addEventListener('click', publishToGitHub);
 
+  })();
+
+  /* ---- Mobile: Seiten proportional auf Viewport-Breite skalieren ---- */
+  (function () {
+    var BREAKPOINT = 700;
+    var GUTTER = 12;
+
+    function scalePages() {
+      var wraps = document.querySelectorAll('.workspace > .page-wrap');
+      if (window.innerWidth > BREAKPOINT) {
+        wraps.forEach(function (w) {
+          w.style.transform = '';
+          w.style.marginBottom = '';
+          w.style.marginLeft = '';
+          w.style.width = '';
+        });
+        return;
+      }
+      var available = window.innerWidth - GUTTER * 2;
+      wraps.forEach(function (wrap) {
+        var page = wrap.querySelector('.page');
+        if (!page) return;
+        // Kurz zurücksetzen, um natürliche Breite zu messen
+        wrap.style.transform = '';
+        wrap.style.width = '';
+        var naturalW = page.offsetWidth || 794;
+        var naturalH = wrap.offsetHeight;
+        var scale = available / naturalW;
+        wrap.style.width = naturalW + 'px';
+        wrap.style.transform = 'scale(' + scale + ')';
+        wrap.style.marginLeft = GUTTER + 'px';
+        // Höhe korrigieren damit Seiten nicht überlappen
+        wrap.style.marginBottom = Math.round(naturalH * scale - naturalH + 16) + 'px';
+      });
+    }
+
+    function run() { scalePages(); setTimeout(scalePages, 200); }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run);
+    } else {
+      run();
+    }
+    window.addEventListener('load', scalePages);
+    window.addEventListener('resize', scalePages);
   })();
   </script>
 
