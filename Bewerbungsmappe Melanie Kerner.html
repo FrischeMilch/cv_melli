@@ -527,7 +527,7 @@
     /* ============================================================
        Passwort — einfacher Client-seitiger Schutz
        ============================================================ */
-    var PW = 'Kerner25';
+    var PW = 'MelanieK!2580#';
     var overlay = document.getElementById('pw-overlay');
     var pwInput = document.getElementById('pw-input');
     var pwError = document.getElementById('pw-error');
@@ -811,7 +811,13 @@
           workspace.insertBefore(newWrap, insertBefore);
           wirePageWrap(newWrap);
           rebuildAddZones();
-          if (editing) activatePageWrap(newWrap);
+          if (editing) {
+            // Set all new fields editable FIRST, then inject controls
+            newWrap.querySelectorAll('[data-k]').forEach(function (el) {
+              el.contentEditable = 'true';
+            });
+            activatePageWrap(newWrap);
+          }
           save();
         });
       });
