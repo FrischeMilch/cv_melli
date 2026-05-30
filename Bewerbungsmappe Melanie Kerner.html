@@ -10,455 +10,990 @@
 <script src="image-slot.js"></script>
 <style>
   :root {
-    --ink: #1d1d1a;
-    --soft: #3a3833;
-    --muted: #6f6c63;
-    --faint: #9a978c;
-    --line: #d7d3c7;
-    --line-soft: #e6e2d7;
-    --paper: #f5f2ea;
-    --bg: #e3e0d6;
-    --green: #2e7d50;
-    --green-deep: #225f3c;
-    --chip: #ebe7dc;
-
+    --ink: #1d1d1a; --soft: #3a3833; --muted: #6f6c63; --faint: #9a978c;
+    --line: #d7d3c7; --line-soft: #e6e2d7; --paper: #f5f2ea; --bg: #e3e0d6;
+    --green: #2e7d50; --green-deep: #225f3c; --chip: #ebe7dc; --red: #c0392b;
     --disp: "Plus Jakarta Sans", system-ui, sans-serif;
     --body: "Plus Jakarta Sans", system-ui, sans-serif;
-
-    --page-w: 210mm;
-    --page-h: 297mm;
-    --pad: 15mm;
-    --gap: 10mm;
+    --page-w: 210mm; --page-h: 297mm; --pad: 15mm; --gap: 10mm;
   }
-
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--body);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); -webkit-font-smoothing: antialiased; }
 
-  /* ---------- Toolbar ---------- */
-  .toolbar {
-    position: fixed; top: 16px; left: 50%;
-    transform: translateX(-50%); z-index: 100;
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,.9);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(29,29,26,.1);
-    padding: 7px 8px 7px 16px; border-radius: 999px;
-    box-shadow: 0 6px 24px rgba(29,29,26,.16);
+  /* ---- Passwort-Overlay ---- */
+  #pw-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(29,29,26,.7); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
   }
-  .toolbar .tb-brand {
-    font-size: 11px; font-weight: 700; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--muted); margin-right: 8px;
+  #pw-overlay.hidden { display: none; }
+  .pw-card {
+    background: var(--paper); border-radius: 16px;
+    padding: 32px 36px; width: 320px;
+    box-shadow: 0 12px 48px rgba(29,29,26,.3);
+    display: flex; flex-direction: column; gap: 14px;
   }
-  .toolbar button {
+  .pw-card h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); }
+  .pw-card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .pw-card input {
+    font-family: var(--body); font-size: 14px; font-weight: 600;
+    border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 14px;
+    outline: none; color: var(--ink); background: #fff;
+  }
+  .pw-card input:focus { border-color: var(--green); }
+  .pw-card button {
     font-family: var(--body); font-size: 13px; font-weight: 700;
+    background: var(--green); color: #fff; border: none;
+    border-radius: 999px; padding: 10px; cursor: pointer;
+  }
+  .pw-card button:hover { background: var(--green-deep); }
+  .pw-error { color: var(--red); font-size: 12px; font-weight: 600; display: none; }
+  .pw-error.show { display: block; }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 200;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.9); backdrop-filter: blur(12px);
+    border: 1px solid rgba(29,29,26,.1); padding: 7px 8px 7px 16px;
+    border-radius: 999px; box-shadow: 0 6px 24px rgba(29,29,26,.16);
+  }
+  .toolbar .tb-brand { font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); margin-right: 8px; }
+  .toolbar button { font-family: var(--body); font-size: 13px; font-weight: 700;
     border: 1px solid var(--line); background: #fff; color: var(--ink);
     padding: 8px 15px; border-radius: 999px; cursor: pointer;
-    transition: all .15s ease; white-space: nowrap;
-  }
+    transition: all .15s ease; white-space: nowrap; }
   .toolbar button:hover { border-color: var(--green); }
   .toolbar button.primary { background: var(--green); color: #fff; border-color: var(--green); }
   .toolbar button.primary:hover { background: var(--green-deep); }
   .toolbar button.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .toolbar button.danger { border-color: rgba(192,57,43,.3); color: var(--red); }
+  .toolbar button.danger:hover { background: var(--red); color: #fff; border-color: var(--red); }
 
   .editing-hint {
-    position: fixed; bottom: 16px; left: 50%;
-    transform: translateX(-50%); z-index: 100;
-    background: var(--ink); color: #f5f2ea;
-    font-size: 11.5px; font-weight: 500; letter-spacing: .01em;
-    padding: 8px 16px; border-radius: 999px;
-    box-shadow: 0 6px 20px rgba(29,29,26,.3);
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 200;
+    background: var(--ink); color: #f5f2ea; font-size: 11.5px; font-weight: 500;
+    padding: 8px 16px; border-radius: 999px; box-shadow: 0 6px 20px rgba(29,29,26,.3);
     opacity: 0; pointer-events: none; transition: opacity .2s ease;
   }
   body.editing .editing-hint { opacity: 1; }
 
-  /* ---------- Workspace / pages ---------- */
-  .workspace {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 16mm; padding: 84px 0 40px;
-  }
-  .page {
-    width: var(--page-w); height: var(--page-h);
-    background: var(--paper); position: relative; overflow: hidden;
-    padding: var(--pad);
-    display: flex; flex-direction: column;
-    box-shadow: 0 2px 10px rgba(29,29,26,.08), 0 18px 50px rgba(29,29,26,.13);
-  }
+  /* ---- Workspace ---- */
+  .workspace { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 84px 0 40px; }
 
-  /* editable affordance */
-  body.editing [data-k] {
-    outline: 1px dashed rgba(46,125,80,.5);
-    outline-offset: 3px; border-radius: 2px;
-    transition: background .12s ease;
-  }
+  .page-wrap { display: flex; flex-direction: column; align-items: center;
+    width: var(--page-w); margin-bottom: 16mm; }
+
+  /* Page ctrl bar above each page */
+  .page-ctrl-bar { display: none; width: 100%; padding: 4px 0 6px;
+    align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px; }
+  body.editing .page-ctrl-bar { display: flex; }
+  .page-ctrl-bar .page-label { font-size: 10px; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); }
+  .page-ctrl-bar .ctrl-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+  .page-ctrl-bar button {
+    font-family: var(--body); font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; cursor: pointer; transition: all .15s; }
+  .page-ctrl-bar .page-del-btn { border: 1px solid rgba(192,57,43,.4);
+    background: rgba(192,57,43,.07); color: var(--red); }
+  .page-ctrl-bar .page-del-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .page-ctrl-bar .side-toggle-btn { border: 1px solid var(--line);
+    background: var(--chip); color: var(--soft); }
+  .page-ctrl-bar .side-toggle-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* Add-page zone */
+  .page-add-zone { display: none; flex-direction: column; align-items: center;
+    width: var(--page-w); margin-bottom: 16mm; }
+  body.editing .page-add-zone { display: flex; }
+  .page-add-btn { font-family: var(--body); font-size: 12px; font-weight: 700;
+    border: 1.5px dashed rgba(46,125,80,.5); background: transparent; color: var(--green);
+    padding: 9px 20px; border-radius: 999px; cursor: pointer; transition: all .15s; width: 100%; }
+  .page-add-btn:hover { background: rgba(46,125,80,.08); border-style: solid; }
+  .page-type-picker { display: none; flex-direction: column; gap: 6px; width: 100%;
+    margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px; box-shadow: 0 4px 20px rgba(29,29,26,.12); }
+  .page-type-picker.open { display: flex; }
+  .ptp-title { font-size: 10px; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); padding: 2px 4px 6px; }
+  .ptp-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ptp-row button { font-family: var(--body); font-size: 12px; font-weight: 600;
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: all .15s; flex: 1; min-width: 120px; }
+  .ptp-row button:hover { border-color: var(--green); background: rgba(46,125,80,.06); color: var(--green); }
+  .ptp-cancel { font-family: var(--body); font-size: 11px; font-weight: 600;
+    border: none; background: none; color: var(--muted); cursor: pointer; padding: 4px;
+    text-align: center; border-radius: 6px; }
+  .ptp-cancel:hover { color: var(--ink); }
+
+  /* ---- Page ---- */
+  .page { width: var(--page-w); height: var(--page-h); background: var(--paper);
+    position: relative; overflow: hidden; padding: var(--pad);
+    display: flex; flex-direction: column;
+    box-shadow: 0 2px 10px rgba(29,29,26,.08), 0 18px 50px rgba(29,29,26,.13); }
+  /* In edit mode pages grow to fit content — no more overflow clipping */
+  body.editing .page { height: auto; min-height: var(--page-h); overflow: visible; }
+
+  /* Editable affordance */
+  body.editing [data-k] { outline: 1px dashed rgba(46,125,80,.5); outline-offset: 2px;
+    border-radius: 2px; transition: background .12s ease; }
   body.editing [data-k]:hover { background: rgba(46,125,80,.07); }
   body.editing [data-k]:focus { outline: 1.5px solid var(--green); background: rgba(46,125,80,.06); }
   [data-k]:focus { outline: none; }
 
-  /* ---------- Shared header ---------- */
+  /* ---- Shared header ---- */
   .hd-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12mm; }
-  .tag {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-weight: 800; font-size: 9pt; letter-spacing: .14em; text-transform: uppercase;
-  }
+  .tag { display: inline-flex; align-items: center; gap: 7px;
+    font-weight: 800; font-size: 9pt; letter-spacing: .14em; text-transform: uppercase; }
   .tag .sq { width: 9px; height: 9px; background: var(--green); display: inline-block; }
   .hd-addr { text-align: right; font-size: 8.6pt; line-height: 1.5; color: var(--soft); }
   .hd-addr .lab { color: var(--green); font-weight: 800; }
-
-  .big {
-    font-family: var(--disp); font-weight: 800;
-    font-size: 34pt; line-height: .94; letter-spacing: -.03em;
-    color: var(--ink); margin: 5mm 0 0;
-  }
+  .big { font-family: var(--disp); font-weight: 800; font-size: 34pt; line-height: .94;
+    letter-spacing: -.03em; color: var(--ink); margin: 5mm 0 0; }
   .big .dot { color: var(--green); }
-
   .rule-row { display: flex; align-items: center; gap: 5mm; margin-top: 4mm; }
   .rule-row::before { content: ""; width: 14mm; height: 2px; background: var(--ink); flex: none; }
   .rule-row::after { content: ""; flex: 1; height: 2px; background: var(--ink); }
-  .rule-row .role {
-    font-weight: 700; font-size: 9pt; letter-spacing: .15em; text-transform: uppercase;
-    white-space: nowrap; color: var(--ink);
-  }
+  .rule-row .role { font-weight: 700; font-size: 9pt; letter-spacing: .15em;
+    text-transform: uppercase; white-space: nowrap; color: var(--ink); }
+  .boxlabel { display: inline-block; border: 1.5px solid var(--ink); font-weight: 800;
+    font-size: 8pt; letter-spacing: .14em; text-transform: uppercase;
+    padding: 1.7mm 3.2mm; color: var(--ink); }
 
-  /* ---------- Box label ---------- */
-  .boxlabel {
-    display: inline-block; border: 1.5px solid var(--ink);
-    font-weight: 800; font-size: 8pt; letter-spacing: .14em; text-transform: uppercase;
-    padding: 1.7mm 3.2mm; color: var(--ink);
-  }
-
-  /* ============ DECKBLATT ============ */
-  .cover-grid {
-    flex: 1; display: grid; grid-template-columns: 1fr 60mm;
-    gap: var(--gap); margin-top: 10mm; align-items: start;
-  }
+  /* ---- Deckblatt ---- */
+  .cover-grid { flex: 1; display: grid; grid-template-columns: 1fr 60mm;
+    gap: var(--gap); margin-top: 10mm; align-items: start; }
   .cover-left { display: flex; flex-direction: column; }
   .cover-left .boxlabel { margin-bottom: 4mm; }
   .cover-left .boxlabel.mt { margin-top: 11mm; }
   .cover-sub { font-size: 12.5pt; line-height: 1.55; color: var(--soft); font-weight: 500; margin: 0; max-width: 96%; }
   .cover-period { font-size: 12pt; font-weight: 700; color: var(--ink); margin: 0; }
   .inhalt { list-style: none; margin: 0; padding: 0; }
-  .inhalt li {
-    display: flex; align-items: baseline; gap: 5mm;
-    padding: 3mm 0; border-bottom: 1px solid var(--line);
-    font-size: 12pt;
-  }
+  .inhalt li { display: flex; align-items: baseline; gap: 5mm; padding: 3mm 0;
+    border-bottom: 1px solid var(--line); font-size: 12pt; }
   .inhalt li:first-child { border-top: 1px solid var(--line); }
   .inhalt .num { font-weight: 800; font-size: 10pt; color: var(--green); width: 14px; }
   .inhalt .label { font-weight: 600; }
-
   .cover-right { display: flex; flex-direction: column; }
-  .cover-photo {
-    width: 100%; aspect-ratio: 3 / 4; overflow: hidden;
-    border: 1.5px solid var(--ink); background: var(--chip);
-  }
+  .cover-photo { width: 100%; aspect-ratio: 3 / 4; overflow: hidden;
+    border: 1.5px solid var(--ink); background: var(--chip); }
   .cover-photo image-slot { width: 100%; height: 100%; display: block; }
   .who { margin-top: 6mm; }
   .who-name { font-family: var(--disp); font-weight: 800; font-size: 15pt; letter-spacing: -.02em; }
   .who-lines { margin-top: 2.5mm; font-size: 9pt; line-height: 1.55; color: var(--soft); }
   .who-lines .lab { color: var(--green); font-weight: 800; }
 
-  /* ============ ANSCHREIBEN ============ */
+  /* ---- Anschreiben ---- */
   .letter-body { flex: 1; display: flex; flex-direction: column; }
   .l-addr { display: flex; justify-content: space-between; align-items: flex-start; gap: 14mm; margin-top: 7mm; }
   .l-to-label { margin-bottom: 3mm; }
   .recipient .to { font-size: 10.2pt; line-height: 1.45; color: var(--ink); }
   .recipient .to strong { font-weight: 700; }
   .l-date { font-size: 9.6pt; font-weight: 600; color: var(--muted); white-space: nowrap; padding-top: 8mm; }
-  .l-subject {
-    font-family: var(--disp); font-weight: 800;
-    font-size: 13.5pt; line-height: 1.3; color: var(--ink);
-    margin: 7mm 0 4.5mm; letter-spacing: -.015em;
-  }
+  .l-subject { font-family: var(--disp); font-weight: 800; font-size: 13.5pt;
+    line-height: 1.3; color: var(--ink); margin: 7mm 0 4.5mm; letter-spacing: -.015em; }
   .l-subject .dot { color: var(--green); }
   .letter p.body { font-size: 10pt; line-height: 1.46; color: var(--soft); margin: 0 0 2.4mm; }
   .l-salut { margin-bottom: 3.5mm !important; color: var(--ink) !important; }
   .l-close { margin-top: 5mm; }
   .l-close .gruss { margin-bottom: 9mm; font-size: 10.2pt; color: var(--soft); }
-  .l-sign { font-family: var(--disp); font-weight: 800; font-size: 15pt; color: var(--ink); letter-spacing: -.01em; }
+  .l-sign { font-family: var(--disp); font-weight: 800; font-size: 15pt;
+    color: var(--ink); letter-spacing: -.01em; }
   .l-sign .dot { color: var(--green); }
+  #letter-paras { display: flex; flex-direction: column; }
 
-  /* ============ LEBENSLAUF ============ */
-  .cv-grid {
-    flex: 1; display: grid; grid-template-columns: 58mm 1fr;
-    gap: var(--gap); margin-top: 6mm;
-  }
+  /* ---- Lebenslauf ---- */
+  .cv-grid { flex: 1; display: grid; grid-template-columns: 58mm 1fr;
+    gap: var(--gap); margin-top: 6mm; }
+  .cv-grid.no-side { grid-template-columns: 1fr; }
+  .cv-grid.no-side .side { display: none; }
   .side { display: flex; flex-direction: column; }
-  .side-photo {
-    width: 100%; aspect-ratio: 5 / 6; overflow: hidden;
-    border: 1.5px solid var(--ink); background: var(--chip); margin-bottom: 4mm;
-  }
+  .side-photo { width: 100%; aspect-ratio: 5 / 6; overflow: hidden;
+    border: 1.5px solid var(--ink); background: var(--chip); margin-bottom: 4mm; }
   .side-photo image-slot { width: 100%; height: 100%; display: block; }
   .sec { margin-bottom: 4mm; }
-  .sec .boxlabel { margin-bottom: 2.5mm; }
-  .s-row { margin-bottom: 1.6mm; }
-  .s-k { font-size: 7.6pt; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--green); margin-bottom: .3mm; }
+  .sec .boxlabel { margin-bottom: 2.5mm; display: block; }
+  .s-row { margin-bottom: 1.6mm; display: flex; flex-direction: column; }
+  .s-k { font-size: 7.6pt; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green); margin-bottom: .3mm; }
   .s-v { font-size: 9.6pt; line-height: 1.38; color: var(--ink); }
   .s-v a { color: inherit; text-decoration: none; word-break: break-word; }
   .blist { list-style: none; margin: 0; padding: 0; }
-  .blist li {
-    font-size: 9.4pt; line-height: 1.3; color: var(--ink);
-    padding-left: 5mm; position: relative; margin-bottom: 1.3mm;
-  }
-  .blist li::before { content: ""; position: absolute; left: 0; top: 4.5px; width: 5px; height: 5px; background: var(--green); }
-
+  .blist li { font-size: 9.4pt; line-height: 1.3; color: var(--ink);
+    padding-left: 5mm; position: relative; margin-bottom: 1.3mm; }
+  .blist li::before { content: ""; position: absolute; left: 0; top: 4.5px;
+    width: 5px; height: 5px; background: var(--green); }
   .main { display: flex; flex-direction: column; }
-  .h-big {
-    font-family: var(--disp); font-weight: 800; font-size: 14pt;
-    letter-spacing: -.02em; color: var(--ink); margin: 0 0 2.5mm;
-  }
+  .h-big { font-family: var(--disp); font-weight: 800; font-size: 14pt;
+    letter-spacing: -.02em; color: var(--ink); margin: 0 0 2.5mm; }
   .h-big .dot { color: var(--green); }
   .h-big.mt { margin-top: 3mm; }
-
-  .row { display: grid; grid-template-columns: 25mm 1fr; gap: 5mm; padding: 1mm 0; border-top: 1px solid var(--line-soft); }
-  .row:first-of-type { border-top: none; padding-top: 0; }
+  .row { display: grid; grid-template-columns: 25mm 1fr; gap: 5mm; padding: 1mm 0;
+    border-top: 1px solid var(--line-soft); }
+  .row:first-child { border-top: none; padding-top: 0; }
   .when { font-size: 8.2pt; font-weight: 700; color: var(--green); line-height: 1.4; }
   .role { font-size: 10pt; font-weight: 700; color: var(--ink); line-height: 1.25; }
   .org { font-size: 8.8pt; color: var(--muted); margin-top: .7mm; line-height: 1.3; }
   .tasks { columns: 2; column-gap: 6mm; list-style: none; margin: 2mm 0 0; padding: 0; }
-  .tasks li {
-    font-size: 8.4pt; line-height: 1.28; color: var(--soft);
-    padding-left: 4mm; position: relative; margin-bottom: .6mm; break-inside: avoid;
-  }
+  .tasks li { font-size: 8.4pt; line-height: 1.28; color: var(--soft);
+    padding-left: 4mm; position: relative; margin-bottom: .6mm; break-inside: avoid; }
   .tasks li::before { content: "•"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
-
-  .cv-foot {
-    margin-top: auto; padding-top: 3mm; border-top: 2px solid var(--ink);
+  #cv-werdegang-rows, #cv-kenntnisse-rows { display: flex; flex-direction: column; }
+  .cv-foot { margin-top: auto; padding-top: 3mm; border-top: 2px solid var(--ink);
     display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 8.8pt; font-weight: 600; color: var(--muted);
-  }
-  .cv-foot .sig { font-family: var(--disp); font-weight: 800; font-size: 12.5pt; color: var(--ink); letter-spacing: -.01em; }
+    font-size: 8.8pt; font-weight: 600; color: var(--muted); }
+  .cv-foot .sig { font-family: var(--disp); font-weight: 800; font-size: 12.5pt;
+    color: var(--ink); letter-spacing: -.01em; }
 
-  /* ============ PRINT ============ */
+  /* ---- Free page ---- */
+  .free-body { flex: 1; display: flex; flex-direction: column; padding-top: 6mm; }
+  .free-content { flex: 1; font-size: 10pt; line-height: 1.6; color: var(--soft); }
+  body.editing .free-content { outline: 1px dashed rgba(46,125,80,.3); border-radius: 4px; padding: 4px; }
+
+  /* ---- Edit controls ---- */
+  /* Add buttons between items */
+  .ec-add { display: none; }
+  body.editing .ec-add {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; border: none; background: transparent; cursor: pointer;
+    padding: 2px 0; position: relative; flex-shrink: 0;
+  }
+  body.editing .ec-add::before { content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: rgba(46,125,80,.25); }
+  body.editing .ec-add span { position: relative; z-index: 1; display: flex;
+    align-items: center; justify-content: center; width: 20px; height: 20px;
+    border-radius: 50%; border: 1.5px solid var(--green); color: var(--green);
+    background: var(--paper); font-size: 14px; font-weight: 700; line-height: 1; transition: all .15s; }
+  body.editing .ec-add:hover span { background: var(--green); color: #fff; }
+
+  /* Delete chip buttons after items */
+  .ec-del { display: none; }
+  body.editing .ec-del {
+    display: inline-flex; align-items: center; gap: 3px;
+    border: 1px solid rgba(192,57,43,.3); background: rgba(192,57,43,.06); color: var(--red);
+    font-family: var(--body); font-size: 10px; font-weight: 700;
+    padding: 1px 8px 1px 5px; border-radius: 999px; cursor: pointer;
+    margin: 2px 0; transition: all .15s; align-self: flex-start;
+  }
+  body.editing .ec-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* Row-spanning delete wrapper inside .row grid */
+  .row-del-wrap { display: none; grid-column: 1 / -1; }
+  body.editing .row-del-wrap { display: flex; padding-bottom: 2px; }
+
+  /* ---- Print ---- */
   @page { size: A4; margin: 0; }
   @media print {
+    /* Force alle Farben und Hintergründe zu drucken */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
     html, body { background: #fff; }
-    .toolbar, .editing-hint { display: none !important; }
+    .toolbar, .editing-hint, #pw-overlay { display: none !important; }
     .workspace { gap: 0; padding: 0; }
-    .page { box-shadow: none; break-after: page; }
+    .page-wrap { margin-bottom: 0; }
+    .page { box-shadow: none; break-after: page; height: var(--page-h) !important;
+      min-height: unset !important; overflow: hidden !important; }
     .page:last-child { break-after: auto; }
-    body.editing [data-k] { outline: none !important; background: none !important; }
+    [data-k] { outline: none !important; background: none !important; }
+    .page-ctrl-bar, .page-add-zone, .ec-add, .ec-del, .row-del-wrap { display: none !important; }
+
+    /* Explizite Farberhaltung für dekorierte Elemente */
+    .tag .sq { background: #2e7d50 !important; }
+    .blist li::before { background: #2e7d50 !important; }
+    .tasks li::before { color: #2e7d50 !important; }
+    .inhalt .num { color: #2e7d50 !important; }
+    .when { color: #2e7d50 !important; }
+    .s-k { color: #2e7d50 !important; }
+    .big .dot, .h-big .dot, .l-subject .dot, .l-sign .dot { color: #2e7d50 !important; }
+    .hd-addr .lab, .who-lines .lab { color: #2e7d50 !important; }
+    .rule-row::before, .rule-row::after { background: #1d1d1a !important; }
+    .cv-foot { border-top-color: #1d1d1a !important; }
+    .boxlabel { border-color: #1d1d1a !important; color: #1d1d1a !important; }
   }
 </style>
 </head>
 <body>
+
+  <!-- ===================== PASSWORT-OVERLAY ===================== -->
+  <div id="pw-overlay">
+    <div class="pw-card">
+      <h2>🔒 Bearbeitungsmodus</h2>
+      <p>Bitte gib das Passwort ein, um Änderungen vorzunehmen.</p>
+      <input type="password" id="pw-input" placeholder="Passwort …" autocomplete="current-password" />
+      <div class="pw-error" id="pw-error">Falsches Passwort. Bitte erneut versuchen.</div>
+      <button id="pw-submit">Entsperren</button>
+    </div>
+  </div>
+
+  <!-- ===================== TOOLBAR ===================== -->
   <div class="toolbar" id="toolbar">
     <span class="tb-brand">Bewerbung</span>
     <button id="btnEdit">✎ Bearbeiten</button>
+    <button id="btnReset" class="danger" title="Alle Änderungen zurücksetzen">↺ Reset</button>
     <button id="btnPdf" class="primary">↓ Als PDF speichern</button>
   </div>
-  <div class="editing-hint">Bearbeitungsmodus — in einen Text klicken zum Ändern. Foto per Drag &amp; Drop, Doppelklick zum Ausrichten.</div>
+  <div class="editing-hint">Bearbeitungsmodus — Texte anklicken · + Zeilen/Absätze hinzufügen · × löschen</div>
 
-  <div class="workspace">
+  <!-- ===================== WORKSPACE ===================== -->
+  <div class="workspace" id="workspace">
 
-    <!-- ===================== DECKBLATT ===================== -->
-    <section class="page cover" data-screen-label="Deckblatt">
-      <header class="hd">
-        <div class="hd-top">
-          <div class="tag"><span class="sq"></span><span data-k="cov-tag">Bewerbungsunterlagen</span></div>
-          <div class="hd-addr">
-            <span data-k="cov-adr">Salzlachenweg 22, 86706 Weichering</span><br />
-            <span class="lab">E:</span> <span data-k="cov-mail">Melanieseeger-1980@web.de</span><br />
-            <span class="lab">P:</span> <span data-k="cov-mob">0176 54149800</span>
-          </div>
+    <!-- DECKBLATT -->
+    <div class="page-wrap">
+      <div class="page-ctrl-bar">
+        <span class="page-label">Deckblatt</span>
+        <div class="ctrl-btns">
+          <button class="page-del-btn">× Seite löschen</button>
         </div>
-        <h1 class="big" data-k="cov-title">Bewerbung<span class="dot">.</span></h1>
-        <div class="rule-row"><span class="role" data-k="cov-role">Praktikum · Kauffrau für Büromanagement (IHK)</span></div>
-      </header>
-
-      <div class="cover-grid">
-        <div class="cover-left">
-          <span class="boxlabel">Worum es geht</span>
-          <p class="cover-sub" data-k="cov-sub">Ausbildungsbegleitender Praktikumsplatz zur Umschulung zur Kauffrau für Büromanagement mit SAP, in Teilzeit — in der Gemeindeverwaltung Weichering.</p>
-          <span class="boxlabel mt">Zeitraum</span>
-          <p class="cover-period" data-k="cov-period">18.01.2021 – 14.07.2022</p>
-          <span class="boxlabel mt">Inhalt</span>
-          <ul class="inhalt">
-            <li><span class="num">01</span><span class="label" data-k="cov-i1">Anschreiben</span></li>
-            <li><span class="num">02</span><span class="label" data-k="cov-i2">Lebenslauf</span></li>
-            <li><span class="num">03</span><span class="label" data-k="cov-i3">Zeugnisse</span></li>
-            <li><span class="num">04</span><span class="label" data-k="cov-i4">Zertifikate</span></li>
-          </ul>
-        </div>
-        <div class="cover-right">
-          <div class="cover-photo">
-            <image-slot id="foto-deckblatt" shape="rect" fit="cover" placeholder="Foto ziehen"></image-slot>
+      </div>
+      <section class="page cover" data-page-type="cover" data-screen-label="Deckblatt">
+        <header class="hd">
+          <div class="hd-top">
+            <div class="tag"><span class="sq"></span><span data-k="cov-tag">Bewerbungsunterlagen</span></div>
+            <div class="hd-addr">
+              <span data-k="cov-adr">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="cov-mail">Melanieseeger-1980@web.de</span><br />
+              <span class="lab">P:</span> <span data-k="cov-mob">0176 54149800</span>
+            </div>
           </div>
-          <div class="who">
-            <div class="who-name" data-k="cov-name">Melanie Kerner</div>
-            <div class="who-lines">
-              <span data-k="cov-adr2">Salzlachenweg 22<br />86706 Weichering</span><br />
-              <span class="lab">P:</span> <span data-k="cov-mob2">0176 54149800</span>
+          <h1 class="big" data-k="cov-title">Bewerbung<span class="dot">.</span></h1>
+          <div class="rule-row"><span class="role" data-k="cov-role">Praktikum · Kauffrau für Büromanagement (IHK)</span></div>
+        </header>
+        <div class="cover-grid">
+          <div class="cover-left">
+            <span class="boxlabel" data-k="cov-lbl1">Worum es geht</span>
+            <p class="cover-sub" data-k="cov-sub">Ausbildungsbegleitender Praktikumsplatz zur Umschulung zur Kauffrau für Büromanagement mit SAP, in Teilzeit — in der Gemeindeverwaltung Weichering.</p>
+            <span class="boxlabel mt" data-k="cov-lbl2">Zeitraum</span>
+            <p class="cover-period" data-k="cov-period">18.01.2021 – 14.07.2022</p>
+            <span class="boxlabel mt" data-k="cov-lbl3">Inhalt</span>
+            <ul class="inhalt">
+              <li><span class="num">01</span><span class="label" data-k="cov-i1">Anschreiben</span></li>
+              <li><span class="num">02</span><span class="label" data-k="cov-i2">Lebenslauf</span></li>
+              <li><span class="num">03</span><span class="label" data-k="cov-i3">Zeugnisse</span></li>
+              <li><span class="num">04</span><span class="label" data-k="cov-i4">Zertifikate</span></li>
+            </ul>
+          </div>
+          <div class="cover-right">
+            <div class="cover-photo">
+              <image-slot id="foto-deckblatt" shape="rect" fit="cover" placeholder="Foto ziehen"></image-slot>
+            </div>
+            <div class="who">
+              <div class="who-name" data-k="cov-name">Melanie Kerner</div>
+              <div class="who-lines">
+                <span data-k="cov-adr2">Salzlachenweg 22<br />86706 Weichering</span><br />
+                <span class="lab">P:</span> <span data-k="cov-mob2">0176 54149800</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
-    <!-- ===================== ANSCHREIBEN ===================== -->
-    <section class="page letter" data-screen-label="Anschreiben">
-      <header class="hd">
-        <div class="hd-top">
-          <div class="tag"><span class="sq"></span><span data-k="l-tag">Anschreiben</span></div>
-          <div class="hd-addr">
-            <span data-k="l-adr">Salzlachenweg 22, 86706 Weichering</span><br />
-            <span class="lab">E:</span> <span data-k="l-mail">Melanieseeger-1980@web.de</span><br />
-            <span class="lab">P:</span> <span data-k="l-phone">08454 911194 · 0176 54149800</span>
-          </div>
-        </div>
-        <h1 class="big" data-k="l-name">Melanie Kerner<span class="dot">.</span></h1>
-        <div class="rule-row"><span class="role" data-k="l-role">Kauffrau für Büromanagement · in Umschulung</span></div>
-      </header>
-
-      <div class="letter-body">
-        <div class="l-addr">
-          <div class="recipient">
-            <span class="boxlabel l-to-label">Empfänger</span>
-            <div class="to" data-k="l-rec">Gemeinde Weichering<br />Erster Bürgermeister<br /><strong>Herr Thomas Mack</strong><br />Kapellenplatz 3<br />86706 Weichering</div>
-          </div>
-          <div class="l-date" data-k="l-date">Weichering, 04.03.2020</div>
-        </div>
-
-        <h3 class="l-subject" data-k="l-subject">Bewerbung um eine Praktikumsstelle als Kauffrau für Büromanagement (IHK) — Praktikumszeitraum 18.01.2021 bis 14.07.2022</h3>
-
-        <p class="body l-salut" data-k="l-salut">Sehr geehrter Herr Mack,</p>
-        <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück“ dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
-        <p class="body" data-k="l-p2">Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
-        <p class="body" data-k="l-p3">Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
-        <p class="body" data-k="l-p4">Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
-        <p class="body" data-k="l-p5">Über die Einladung zu einem persönlichen Gespräch freue ich mich sehr.</p>
-
-        <div class="l-close">
-          <p class="gruss" data-k="l-gruss">Mit freundlichen Grüßen</p>
-          <div class="l-sign" data-k="l-sign">Melanie Kerner</div>
+    <!-- ANSCHREIBEN -->
+    <div class="page-wrap">
+      <div class="page-ctrl-bar">
+        <span class="page-label">Anschreiben</span>
+        <div class="ctrl-btns">
+          <button class="page-del-btn">× Seite löschen</button>
         </div>
       </div>
-    </section>
-
-    <!-- ===================== LEBENSLAUF ===================== -->
-    <section class="page cv" data-screen-label="Lebenslauf">
-      <header class="hd">
-        <div class="hd-top">
-          <div class="tag"><span class="sq"></span><span data-k="cv-tag">Lebenslauf</span></div>
-          <div class="hd-addr">
-            <span data-k="cv-adr0">Salzlachenweg 22, 86706 Weichering</span><br />
-            <span class="lab">E:</span> <span data-k="cv-mail0">Melanieseeger-1980@web.de</span><br />
-            <span class="lab">P:</span> <span data-k="cv-phone0">0176 54149800</span>
+      <section class="page letter" data-page-type="letter" data-screen-label="Anschreiben">
+        <header class="hd">
+          <div class="hd-top">
+            <div class="tag"><span class="sq"></span><span data-k="l-tag">Anschreiben</span></div>
+            <div class="hd-addr">
+              <span data-k="l-adr">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="l-mail">Melanieseeger-1980@web.de</span><br />
+              <span class="lab">P:</span> <span data-k="l-phone">08454 911194 · 0176 54149800</span>
+            </div>
+          </div>
+          <h1 class="big" data-k="l-name">Melanie Kerner<span class="dot">.</span></h1>
+          <div class="rule-row"><span class="role" data-k="l-role">Kauffrau für Büromanagement · in Umschulung</span></div>
+        </header>
+        <div class="letter-body">
+          <div class="l-addr">
+            <div class="recipient">
+              <span class="boxlabel l-to-label" data-k="l-rec-lbl">Empfänger</span>
+              <div class="to" data-k="l-rec">Gemeinde Weichering<br />Erster Bürgermeister<br /><strong>Herr Thomas Mack</strong><br />Kapellenplatz 3<br />86706 Weichering</div>
+            </div>
+            <div class="l-date" data-k="l-date">Weichering, 04.03.2020</div>
+          </div>
+          <h3 class="l-subject" data-k="l-subject">Bewerbung um eine Praktikumsstelle als Kauffrau für Büromanagement (IHK) — Praktikumszeitraum 18.01.2021 bis 14.07.2022</h3>
+          <div id="letter-paras">
+            <p class="body l-salut" data-k="l-salut">Sehr geehrter Herr Mack,</p>
+            <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück" dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
+            <p class="body" data-k="l-p2">Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
+            <p class="body" data-k="l-p3">Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
+            <p class="body" data-k="l-p4">Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
+            <p class="body" data-k="l-p5">Über die Einladung zu einem persönlichen Gespräch freue ich mich sehr.</p>
+          </div>
+          <div class="l-close">
+            <p class="gruss" data-k="l-gruss">Mit freundlichen Grüßen</p>
+            <div class="l-sign" data-k="l-sign">Melanie Kerner</div>
           </div>
         </div>
-        <h1 class="big" data-k="cv-name">Melanie Kerner<span class="dot">.</span></h1>
-        <div class="rule-row"><span class="role" data-k="cv-role">Kauffrau für Büromanagement · SAP</span></div>
-      </header>
+      </section>
+    </div>
 
-      <div class="cv-grid">
-        <aside class="side">
-          <div class="side-photo">
-            <image-slot id="foto-lebenslauf" shape="rect" fit="cover" placeholder="Foto ziehen"></image-slot>
-          </div>
-
-          <div class="sec">
-            <span class="boxlabel">Kontakt</span>
-            <div class="s-row"><div class="s-k">Adresse</div><div class="s-v" data-k="cv-adr">Salzlachenweg 22<br />86706 Weichering</div></div>
-            <div class="s-row"><div class="s-k">Telefon</div><div class="s-v" data-k="cv-tel">08454 911194</div></div>
-            <div class="s-row"><div class="s-k">Mobil</div><div class="s-v" data-k="cv-mob">0176 54149800</div></div>
-            <div class="s-row"><div class="s-k">E-Mail</div><div class="s-v" data-k="cv-mail"><a href="mailto:Melanieseeger-1980@web.de">Melanieseeger-1980@web.de</a></div></div>
-          </div>
-
-          <div class="sec">
-            <span class="boxlabel">Persönliche Daten</span>
-            <div class="s-row"><div class="s-k">Geboren</div><div class="s-v" data-k="cv-geb">24.11.1980 in Ingolstadt</div></div>
-            <div class="s-row"><div class="s-k">Familie</div><div class="s-v" data-k="cv-fam">Verheiratet, 2 Kinder (versorgt)</div></div>
-            <div class="s-row"><div class="s-k">Staatsangeh.</div><div class="s-v" data-k="cv-staat">Deutsch</div></div>
-          </div>
-
-          <div class="sec">
-            <span class="boxlabel">Stärken</span>
-            <ul class="blist">
-              <li data-k="cv-s1">Zielorientiert &amp; eigenverantwortlich</li>
-              <li data-k="cv-s2">Freundlich &amp; kundenorientiert</li>
-              <li data-k="cv-s3">Organisations- &amp; Teamfähigkeit</li>
-              <li data-k="cv-s4">Kommunikationsstark</li>
-              <li data-k="cv-s5">Unternehmerisches Denken</li>
-            </ul>
-          </div>
-        </aside>
-
-        <div class="main">
-          <h2 class="h-big">Beruflicher Werdegang<span class="dot">.</span></h2>
-
-          <div class="row"><div class="when" data-k="w1">07.2022 — heute</div><div><div class="role" data-k="r1">Assistenz der Werkleitung, anschl. Vertriebsinnendienst</div><div class="org" data-k="o1">Tricor Packaging Systems GmbH, Neuburg</div></div></div>
-          <div class="row"><div class="when" data-k="w2">09.2019 — 06.2022</div><div><div class="role" data-k="r2">Umschulung zur Kauffrau für Büromanagement mit SAP (IHK-Abschluss)</div><div class="org" data-k="o2">DEKRA Akademie GmbH, Neuburg/Donau · inkl. 17 Monate Praktikum in Teilzeit</div></div></div>
-          <div class="row"><div class="when" data-k="w3">09.2018 — 08.2019</div><div><div class="role" data-k="r3">Ausbildung Steuerfachangestellte / Kauffrau für Büromanagement</div><div class="org" data-k="o3">Steuerkanzlei Schabmüller &amp; Lösel, Ingolstadt</div></div></div>
-          <div class="row"><div class="when" data-k="w4">03.2018 — 08.2018</div><div><div class="role" data-k="r4">Mitarbeiterin Verkauf (Teilzeit)</div><div class="org" data-k="o4">Ernstings Family GmbH &amp; Co. KG, Ingolstadt</div></div></div>
-          <div class="row"><div class="when" data-k="w5">08.2013 — 02.2018</div><div><div class="role" data-k="r5">Mitarbeiterin Verkauf &amp; Filialleitung</div><div class="org" data-k="o5">NKD Deutschland GmbH, Ingolstadt</div>
-            <ul class="tasks">
-              <li data-k="t1">Kundenberatung</li>
-              <li data-k="t2">Warenpräsentation</li>
-              <li data-k="t3">Wareneingang &amp; Lieferscheine</li>
-              <li data-k="t4">Kasse, Tresor &amp; Abrechnung</li>
-              <li data-k="t5">Inventur</li>
-              <li data-k="t6">Mitarbeitereinsatzplanung</li>
-            </ul>
-          </div></div>
-          <div class="row"><div class="when" data-k="w6">11.2011 — 05.2012</div><div><div class="role" data-k="r6">Pflegehilfskraft (Teilzeit)</div><div class="org" data-k="o6">Sonnen Team, Neuburg</div></div></div>
-          <div class="row"><div class="when" data-k="w7">04.2006 — 11.2007</div><div><div class="role" data-k="r7">Aushilfe im Verkauf</div><div class="org" data-k="o7">ROFU Kinderland, Neuburg an der Donau</div></div></div>
-          <div class="row"><div class="when" data-k="w8">08.1998 — 09.2005</div><div><div class="role" data-k="r8">Häusliche Pflegekraft</div><div class="org" data-k="o8">Privater Haushalt (Großeltern)</div></div></div>
-
-          <h2 class="h-big mt">Kenntnisse<span class="dot">.</span></h2>
-          <div class="row"><div class="when">EDV</div><div><div class="role" data-k="q1">MS Office (Word, Excel, PowerPoint) · SAP · Internet</div></div></div>
-          <div class="row"><div class="when">Sprachen</div><div><div class="role" data-k="q2">Deutsch (Muttersprache) · Englisch (Grundkenntnisse)</div></div></div>
-          <div class="row"><div class="when">Führerschein</div><div><div class="role" data-k="q3">Klasse B</div></div></div>
-          <div class="row"><div class="when">Weiterbildung</div><div><div class="role" data-k="q4">Grundseminar Sicherheitsbeauftragte für Büro &amp; Verwaltung</div><div class="org" data-k="q4o">Berufsgenossenschaft (BG), Augsburg</div></div></div>
-
-          <div class="cv-foot">
-            <span data-k="cv-place">Weichering, 23.07.2025</span>
-            <span class="sig" data-k="cv-sig">Melanie Kerner</span>
-          </div>
+    <!-- LEBENSLAUF -->
+    <div class="page-wrap">
+      <div class="page-ctrl-bar">
+        <span class="page-label">Lebenslauf</span>
+        <div class="ctrl-btns">
+          <button class="side-toggle-btn" data-target=".cv-grid">◧ Spalte ausblenden</button>
+          <button class="page-del-btn">× Seite löschen</button>
         </div>
       </div>
-    </section>
+      <section class="page cv" data-page-type="cv" data-screen-label="Lebenslauf">
+        <header class="hd">
+          <div class="hd-top">
+            <div class="tag"><span class="sq"></span><span data-k="cv-tag">Lebenslauf</span></div>
+            <div class="hd-addr">
+              <span data-k="cv-adr0">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="cv-mail0">Melanieseeger-1980@web.de</span><br />
+              <span class="lab">P:</span> <span data-k="cv-phone0">0176 54149800</span>
+            </div>
+          </div>
+          <h1 class="big" data-k="cv-name">Melanie Kerner<span class="dot">.</span></h1>
+          <div class="rule-row"><span class="role" data-k="cv-role">Kauffrau für Büromanagement · SAP</span></div>
+        </header>
+        <div class="cv-grid">
+          <aside class="side">
+            <div class="side-photo">
+              <image-slot id="foto-lebenslauf" shape="rect" fit="cover" placeholder="Foto ziehen"></image-slot>
+            </div>
+            <div class="sec">
+              <span class="boxlabel" data-k="cv-sec-kontakt">Kontakt</span>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-adr">Adresse</div><div class="s-v" data-k="cv-adr">Salzlachenweg 22<br />86706 Weichering</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-tel">Telefon</div><div class="s-v" data-k="cv-tel">08454 911194</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-mob">Mobil</div><div class="s-v" data-k="cv-mob">0176 54149800</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-mail">E-Mail</div><div class="s-v" data-k="cv-mail"><a href="mailto:Melanieseeger-1980@web.de">Melanieseeger-1980@web.de</a></div></div>
+            </div>
+            <div class="sec">
+              <span class="boxlabel" data-k="cv-sec-pers">Persönliche Daten</span>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-geb">Geboren</div><div class="s-v" data-k="cv-geb">24.11.1980 in Ingolstadt</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-fam">Familie</div><div class="s-v" data-k="cv-fam">Verheiratet, 2 Kinder (versorgt)</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-staat">Staatsangeh.</div><div class="s-v" data-k="cv-staat">Deutsch</div></div>
+            </div>
+            <div class="sec">
+              <span class="boxlabel" data-k="cv-sec-staerken">Stärken</span>
+              <ul class="blist">
+                <li data-k="cv-s1">Zielorientiert &amp; eigenverantwortlich</li>
+                <li data-k="cv-s2">Freundlich &amp; kundenorientiert</li>
+                <li data-k="cv-s3">Organisations- &amp; Teamfähigkeit</li>
+                <li data-k="cv-s4">Kommunikationsstark</li>
+                <li data-k="cv-s5">Unternehmerisches Denken</li>
+              </ul>
+            </div>
+          </aside>
+          <div class="main">
+            <h2 class="h-big" data-k="cv-h-werdegang">Beruflicher Werdegang<span class="dot">.</span></h2>
+            <div id="cv-werdegang-rows">
+              <div class="row"><div class="when" data-k="w1">07.2022 — heute</div><div><div class="role" data-k="r1">Assistenz der Werkleitung, anschl. Vertriebsinnendienst</div><div class="org" data-k="o1">Tricor Packaging Systems GmbH, Neuburg</div></div></div>
+              <div class="row"><div class="when" data-k="w2">09.2019 — 06.2022</div><div><div class="role" data-k="r2">Umschulung zur Kauffrau für Büromanagement mit SAP (IHK-Abschluss)</div><div class="org" data-k="o2">DEKRA Akademie GmbH, Neuburg/Donau · inkl. 17 Monate Praktikum in Teilzeit</div></div></div>
+              <div class="row"><div class="when" data-k="w3">09.2018 — 08.2019</div><div><div class="role" data-k="r3">Ausbildung Steuerfachangestellte / Kauffrau für Büromanagement</div><div class="org" data-k="o3">Steuerkanzlei Schabmüller &amp; Lösel, Ingolstadt</div></div></div>
+              <div class="row"><div class="when" data-k="w4">03.2018 — 08.2018</div><div><div class="role" data-k="r4">Mitarbeiterin Verkauf (Teilzeit)</div><div class="org" data-k="o4">Ernstings Family GmbH &amp; Co. KG, Ingolstadt</div></div></div>
+              <div class="row"><div class="when" data-k="w5">08.2013 — 02.2018</div><div><div class="role" data-k="r5">Mitarbeiterin Verkauf &amp; Filialleitung</div><div class="org" data-k="o5">NKD Deutschland GmbH, Ingolstadt</div>
+                <ul class="tasks">
+                  <li data-k="t1">Kundenberatung</li><li data-k="t2">Warenpräsentation</li>
+                  <li data-k="t3">Wareneingang &amp; Lieferscheine</li><li data-k="t4">Kasse, Tresor &amp; Abrechnung</li>
+                  <li data-k="t5">Inventur</li><li data-k="t6">Mitarbeitereinsatzplanung</li>
+                </ul>
+              </div></div>
+              <div class="row"><div class="when" data-k="w6">11.2011 — 05.2012</div><div><div class="role" data-k="r6">Pflegehilfskraft (Teilzeit)</div><div class="org" data-k="o6">Sonnen Team, Neuburg</div></div></div>
+              <div class="row"><div class="when" data-k="w7">04.2006 — 11.2007</div><div><div class="role" data-k="r7">Aushilfe im Verkauf</div><div class="org" data-k="o7">ROFU Kinderland, Neuburg an der Donau</div></div></div>
+              <div class="row"><div class="when" data-k="w8">08.1998 — 09.2005</div><div><div class="role" data-k="r8">Häusliche Pflegekraft</div><div class="org" data-k="o8">Privater Haushalt (Großeltern)</div></div></div>
+            </div>
+            <h2 class="h-big mt" data-k="cv-h-kenntnisse">Kenntnisse<span class="dot">.</span></h2>
+            <div id="cv-kenntnisse-rows">
+              <div class="row"><div class="when" data-k="qw1">EDV</div><div><div class="role" data-k="q1">MS Office (Word, Excel, PowerPoint) · SAP · Internet</div></div></div>
+              <div class="row"><div class="when" data-k="qw2">Sprachen</div><div><div class="role" data-k="q2">Deutsch (Muttersprache) · Englisch (Grundkenntnisse)</div></div></div>
+              <div class="row"><div class="when" data-k="qw3">Führerschein</div><div><div class="role" data-k="q3">Klasse B</div></div></div>
+              <div class="row"><div class="when" data-k="qw4">Weiterbildung</div><div><div class="role" data-k="q4">Grundseminar Sicherheitsbeauftragte für Büro &amp; Verwaltung</div><div class="org" data-k="q4o">Berufsgenossenschaft (BG), Augsburg</div></div></div>
+            </div>
+            <div class="cv-foot">
+              <span data-k="cv-place">Weichering, 23.07.2025</span>
+              <span class="sig" data-k="cv-sig">Melanie Kerner</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
-  </div>
+  </div><!-- /workspace -->
 
   <script>
-    (function () {
-      var KEY = 'bewerbung-edits-v3';
-      var editables = Array.prototype.slice.call(document.querySelectorAll('[data-k]'));
-      var store = {};
-      try { store = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
-      editables.forEach(function (el) {
-        if (store[el.dataset.k] != null) el.innerHTML = store[el.dataset.k];
-      });
-      function save() {
-        var o = {};
-        editables.forEach(function (el) { o[el.dataset.k] = el.innerHTML; });
-        try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
+  (function () {
+    /* ============================================================
+       Passwort — einfacher Client-seitiger Schutz
+       ============================================================ */
+    var PW = 'MelanieK!2580#';
+    var overlay = document.getElementById('pw-overlay');
+    var pwInput = document.getElementById('pw-input');
+    var pwError = document.getElementById('pw-error');
+
+    // Overlay erscheint NUR wenn der Nutzer auf "Bearbeiten" klickt
+    overlay.classList.add('hidden');
+
+    function checkPassword() {
+      if (pwInput.value === PW) {
+        overlay.classList.add('hidden');
+        pwError.classList.remove('show');
+        pwInput.value = '';
+        // Merken für diese Session
+        sessionStorage.setItem('bw-auth', '1');
+        setEditing(true);
+      } else {
+        pwError.classList.add('show');
+        pwInput.focus();
       }
-      var editing = false;
-      var btnEdit = document.getElementById('btnEdit');
-      var btnPdf = document.getElementById('btnPdf');
-      function setEditing(on) {
-        editing = on;
-        document.body.classList.toggle('editing', on);
-        editables.forEach(function (el) { el.contentEditable = on ? 'true' : 'false'; });
-        btnEdit.classList.toggle('active', on);
-        btnEdit.innerHTML = on ? '✓ Fertig' : '✎ Bearbeiten';
+    }
+    document.getElementById('pw-submit').addEventListener('click', checkPassword);
+    pwInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') checkPassword(); });
+
+    /* ============================================================
+       Persistence
+       ============================================================ */
+    var STORE_KEY = 'bewerbung-v6';
+    var workspace = document.getElementById('workspace');
+
+    function loadSaved() {
+      try {
+        var saved = localStorage.getItem(STORE_KEY);
+        if (saved) workspace.innerHTML = JSON.parse(saved);
+      } catch (e) {}
+    }
+
+    function save() {
+      var clone = workspace.cloneNode(true);
+      clone.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .page-add-zone').forEach(function (n) { n.remove(); });
+      clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(clone.innerHTML)); } catch (e) {}
+    }
+
+    loadSaved();
+
+    /* ============================================================
+       Helpers
+       ============================================================ */
+    var editing = false;
+    var _id = Date.now();
+    function uid() { return 'x' + (++_id); }
+
+    function makeAddBtn(title, onClick) {
+      var b = document.createElement('button');
+      b.className = 'ec-add'; b.type = 'button'; b.title = title || '+';
+      b.innerHTML = '<span>+</span>';
+      b.addEventListener('click', function (e) { e.stopPropagation(); onClick(); });
+      return b;
+    }
+    function makeDelBtn(label, onClick) {
+      var b = document.createElement('button');
+      b.className = 'ec-del'; b.type = 'button';
+      b.innerHTML = '× ' + label;
+      b.addEventListener('click', function (e) { e.stopPropagation(); onClick(); });
+      return b;
+    }
+    function focusEl(el) {
+      if (!el) return; el.focus();
+      try { var r = document.createRange(); r.selectNodeContents(el);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+    }
+    function stripCtrl(parent) {
+      parent.querySelectorAll('.ec-add, .ec-del, .row-del-wrap').forEach(function (n) { n.remove(); });
+    }
+    function setEditable(el, on) { el.querySelectorAll('[data-k]').forEach(function (n) { n.contentEditable = on ? 'true' : 'false'; }); }
+
+    /* ============================================================
+       Letter paragraphs
+       ============================================================ */
+    function refreshLetterControls(c) {
+      stripCtrl(c);
+      var salut = c.querySelector('p.l-salut');
+      var paras = Array.from(c.querySelectorAll('p.body:not(.l-salut)'));
+
+      function insertPara(beforeEl) {
+        var p = document.createElement('p');
+        p.className = 'body'; p.dataset.k = 'lp-' + uid();
+        if (editing) p.contentEditable = 'true';
+        p.textContent = 'Neuer Absatz …';
+        c.insertBefore(p, beforeEl);
+        refreshLetterControls(c); save(); focusEl(p);
       }
-      btnEdit.addEventListener('click', function () { setEditing(!editing); });
-      document.addEventListener('input', function (e) {
-        if (e.target.closest && e.target.closest('[data-k]')) save();
+
+      if (salut) {
+        var aAfterSalut = makeAddBtn('Absatz nach Anrede', function () { insertPara(aAfterSalut); });
+        salut.insertAdjacentElement('afterend', aAfterSalut);
+      }
+
+      paras.forEach(function (p) {
+        var del = makeDelBtn('Absatz', function () { p.remove(); refreshLetterControls(c); save(); });
+        p.insertAdjacentElement('afterend', del);
+        var aAfterP = makeAddBtn('Absatz einfügen', function () { insertPara(aAfterP); });
+        del.insertAdjacentElement('afterend', aAfterP);
       });
-      btnPdf.addEventListener('click', function () {
-        if (editing) setEditing(false);
-        setTimeout(function () { window.print(); }, 60);
+    }
+
+    /* ============================================================
+       CV row sections
+       ============================================================ */
+    function refreshRowControls(c, newRowFn) {
+      stripCtrl(c);
+      var rows = Array.from(c.querySelectorAll(':scope > .row'));
+
+      function insertRow(beforeEl) {
+        var row = newRowFn();
+        c.insertBefore(row, beforeEl);
+        if (editing) setEditable(row, true);
+        refreshRowControls(c, newRowFn); save();
+        focusEl(row.querySelector('[data-k]'));
+      }
+
+      // Top add button
+      var topAdd = makeAddBtn('Zeile oben', function () { insertRow(topAdd); });
+      c.insertBefore(topAdd, c.firstChild);
+
+      rows.forEach(function (row) {
+        // Delete via grid-spanning wrapper
+        var wrap = document.createElement('div'); wrap.className = 'row-del-wrap';
+        var del = makeDelBtn('Zeile löschen', function () { row.remove(); refreshRowControls(c, newRowFn); save(); });
+        wrap.appendChild(del); row.appendChild(wrap);
+
+        var aAfter = makeAddBtn('Zeile unten', function () { insertRow(aAfter); });
+        row.insertAdjacentElement('afterend', aAfter);
       });
-    })();
+    }
+
+    function newWerdegangRow() {
+      var id = uid(); var d = document.createElement('div'); d.className = 'row';
+      d.innerHTML = '<div class="when" data-k="w-' + id + '">Zeitraum</div>' +
+        '<div><div class="role" data-k="r-' + id + '">Position / Tätigkeit</div>' +
+        '<div class="org" data-k="o-' + id + '">Organisation, Ort</div></div>';
+      return d;
+    }
+    function newKenntnisseRow() {
+      var id = uid(); var d = document.createElement('div'); d.className = 'row';
+      d.innerHTML = '<div class="when" data-k="qw-' + id + '">Kategorie</div>' +
+        '<div><div class="role" data-k="qv-' + id + '">Inhalt</div></div>';
+      return d;
+    }
+
+    /* ============================================================
+       Sidebar sections
+       ============================================================ */
+    function refreshSideSecControls(sec) {
+      var blist = sec.querySelector('.blist');
+      if (blist) refreshBlistControls(blist);
+      else refreshSRowControls(sec);
+    }
+
+    function refreshBlistControls(blist) {
+      stripCtrl(blist);
+      var items = Array.from(blist.querySelectorAll(':scope > li'));
+
+      function insertLi(beforeEl) {
+        var li = document.createElement('li');
+        li.dataset.k = 'li-' + uid();
+        if (editing) li.contentEditable = 'true';
+        li.textContent = 'Neue Stärke …';
+        blist.insertBefore(li, beforeEl);
+        refreshBlistControls(blist); save(); focusEl(li);
+      }
+
+      var topAdd = makeAddBtn('Eintrag oben', function () { insertLi(topAdd); });
+      blist.insertBefore(topAdd, blist.firstChild);
+
+      items.forEach(function (li) {
+        var del = makeDelBtn('Löschen', function () { li.remove(); refreshBlistControls(blist); save(); });
+        li.insertAdjacentElement('afterend', del);
+        var aAfter = makeAddBtn('Eintrag unten', function () { insertLi(aAfter); });
+        del.insertAdjacentElement('afterend', aAfter);
+      });
+    }
+
+    function refreshSRowControls(sec) {
+      stripCtrl(sec);
+      var sRows = Array.from(sec.querySelectorAll(':scope > .s-row'));
+      var boxlabel = sec.querySelector('.boxlabel');
+
+      function insertSRow(beforeEl) {
+        var id = uid();
+        var d = document.createElement('div'); d.className = 's-row';
+        d.innerHTML = '<div class="s-k" data-k="sk-' + id + '">Label</div>' +
+                      '<div class="s-v" data-k="sv-' + id + '">Wert</div>';
+        sec.insertBefore(d, beforeEl);
+        if (editing) setEditable(d, true);
+        refreshSRowControls(sec); save(); focusEl(d.querySelector('[data-k]'));
+      }
+
+      // First add button: after boxlabel
+      var firstRef = boxlabel ? boxlabel.nextSibling : sec.firstChild;
+      // Find first s-row to insert before it, or use firstRef
+      var firstSRow = sRows[0] || null;
+      var topAdd = makeAddBtn('Eintrag oben', function () { insertSRow(topAdd); });
+      sec.insertBefore(topAdd, firstSRow || firstRef);
+
+      sRows.forEach(function (sr) {
+        var del = makeDelBtn('Eintrag löschen', function () { sr.remove(); refreshSRowControls(sec); save(); });
+        sr.insertAdjacentElement('afterend', del);
+        var aAfter = makeAddBtn('Eintrag unten', function () { insertSRow(aAfter); });
+        del.insertAdjacentElement('afterend', aAfter);
+      });
+    }
+
+    /* ============================================================
+       Page management
+       ============================================================ */
+    function getPageWraps() { return Array.from(workspace.querySelectorAll(':scope > .page-wrap')); }
+
+    function wirePageWrap(wrap) {
+      // Delete button
+      var delBtn = wrap.querySelector('.page-del-btn');
+      if (delBtn && !delBtn._wired) {
+        delBtn._wired = true;
+        delBtn.addEventListener('click', function () {
+          var lbl = (wrap.querySelector('.page-label') || {}).textContent || 'diese Seite';
+          if (!confirm('Seite „' + lbl + '" wirklich löschen?')) return;
+          wrap.remove(); rebuildAddZones(); save();
+        });
+      }
+      // Sidebar toggle
+      var sideBtn = wrap.querySelector('.side-toggle-btn');
+      if (sideBtn && !sideBtn._wired) {
+        sideBtn._wired = true;
+        sideBtn.addEventListener('click', function () {
+          var page = wrap.querySelector('.page');
+          var grid = page && page.querySelector('.cv-grid');
+          if (!grid) return;
+          var hidden = grid.classList.toggle('no-side');
+          sideBtn.textContent = hidden ? '◧ Spalte einblenden' : '◧ Spalte ausblenden';
+          save();
+        });
+        // Restore label if already hidden
+        var grid = wrap.querySelector('.cv-grid');
+        if (grid && grid.classList.contains('no-side')) {
+          sideBtn.textContent = '◧ Spalte einblenden';
+        }
+      }
+    }
+
+    function makePageAddZone(afterWrap) {
+      var zone = document.createElement('div');
+      zone.className = 'page-add-zone';
+
+      var addBtn = document.createElement('button');
+      addBtn.className = 'page-add-btn'; addBtn.type = 'button';
+      addBtn.textContent = '+ Neue Seite hinzufügen';
+
+      var picker = document.createElement('div');
+      picker.className = 'page-type-picker';
+      picker.innerHTML =
+        '<div class="ptp-title">Seitentyp wählen</div>' +
+        '<div class="ptp-row">' +
+          '<button data-pt="letter">✉ Anschreiben</button>' +
+          '<button data-pt="cv">📄 Lebenslauf</button>' +
+          '<button data-pt="free">📝 Freitext / Anlage</button>' +
+          '<button data-pt="blank">◻ Leere Seite</button>' +
+        '</div>' +
+        '<button class="ptp-cancel">Abbrechen</button>';
+
+      zone.appendChild(addBtn);
+      zone.appendChild(picker);
+
+      addBtn.addEventListener('click', function () { picker.classList.toggle('open'); });
+      picker.querySelector('.ptp-cancel').addEventListener('click', function () { picker.classList.remove('open'); });
+      picker.querySelectorAll('[data-pt]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          picker.classList.remove('open');
+          var newWrap = buildNewPage(btn.dataset.pt);
+          // Insert after afterWrap (or at end if afterWrap is null)
+          var insertBefore = afterWrap ? afterWrap.nextSibling : null;
+          workspace.insertBefore(newWrap, insertBefore);
+          wirePageWrap(newWrap);
+          rebuildAddZones();
+          if (editing) {
+            // Set all new fields editable FIRST, then inject controls
+            newWrap.querySelectorAll('[data-k]').forEach(function (el) {
+              el.contentEditable = 'true';
+            });
+            activatePageWrap(newWrap);
+          }
+          save();
+        });
+      });
+
+      return zone;
+    }
+
+    function rebuildAddZones() {
+      workspace.querySelectorAll(':scope > .page-add-zone').forEach(function (z) { z.remove(); });
+      var wraps = getPageWraps();
+      wraps.forEach(function (wrap) {
+        var zone = makePageAddZone(wrap);
+        wrap.insertAdjacentElement('afterend', zone);
+      });
+    }
+
+    /* ============================================================
+       New page templates
+       ============================================================ */
+    function sharedHdr(id, tagTxt) {
+      return '<header class="hd"><div class="hd-top">' +
+        '<div class="tag"><span class="sq"></span><span data-k="tag-' + id + '">' + tagTxt + '</span></div>' +
+        '<div class="hd-addr"><span data-k="adr-' + id + '">Salzlachenweg 22, 86706 Weichering</span><br />' +
+        '<span class="lab">E:</span> <span data-k="mail-' + id + '">Melanieseeger-1980@web.de</span><br />' +
+        '<span class="lab">P:</span> <span data-k="mob-' + id + '">0176 54149800</span></div></div>' +
+        '<h1 class="big" data-k="name-' + id + '">Melanie Kerner<span class="dot">.</span></h1>' +
+        '<div class="rule-row"><span class="role" data-k="role-' + id + '">Kauffrau für Büromanagement</span></div></header>';
+    }
+
+    function buildNewPage(type) {
+      var id = uid();
+      var wrap = document.createElement('div'); wrap.className = 'page-wrap';
+      var labels = { letter: 'Anschreiben', cv: 'Lebenslauf', free: 'Freitext', blank: 'Leere Seite' };
+      var hasSideToggle = (type === 'cv');
+
+      wrap.innerHTML =
+        '<div class="page-ctrl-bar">' +
+          '<span class="page-label">' + (labels[type] || 'Seite') + '</span>' +
+          '<div class="ctrl-btns">' +
+          (hasSideToggle ? '<button class="side-toggle-btn">◧ Spalte ausblenden</button>' : '') +
+          '<button class="page-del-btn">× Seite löschen</button>' +
+          '</div></div>' +
+        '<section class="page" data-page-type="' + type + '"></section>';
+
+      var page = wrap.querySelector('.page');
+      if (type === 'letter') {
+        page.classList.add('letter');
+        page.innerHTML = sharedHdr(id, 'Anschreiben') +
+          '<div class="letter-body"><div class="l-addr">' +
+          '<div class="recipient"><span class="boxlabel l-to-label" data-k="rec-lbl-' + id + '">Empfänger</span>' +
+          '<div class="to" data-k="rec-' + id + '">Empfänger<br />Straße Nr.<br />PLZ Ort</div></div>' +
+          '<div class="l-date" data-k="date-' + id + '">Ort, Datum</div></div>' +
+          '<h3 class="l-subject" data-k="subj-' + id + '">Betreff …</h3>' +
+          '<div id="lp-' + id + '">' +
+            '<p class="body l-salut" data-k="salut-' + id + '">Sehr geehrte Damen und Herren,</p>' +
+            '<p class="body" data-k="p1-' + id + '">Text des Anschreibens …</p>' +
+          '</div>' +
+          '<div class="l-close"><p class="gruss" data-k="gruss-' + id + '">Mit freundlichen Grüßen</p>' +
+          '<div class="l-sign" data-k="sign-' + id + '">Melanie Kerner</div></div></div>';
+      } else if (type === 'cv') {
+        page.classList.add('cv');
+        page.innerHTML = sharedHdr(id, 'Lebenslauf') +
+          '<div class="cv-grid"><aside class="side">' +
+          '<div class="sec"><span class="boxlabel" data-k="sec1-' + id + '">Kontakt</span>' +
+          '<div class="s-row"><div class="s-k" data-k="sk1-' + id + '">E-Mail</div>' +
+          '<div class="s-v" data-k="sv1-' + id + '">E-Mail-Adresse</div></div></div>' +
+          '</aside><div class="main">' +
+          '<h2 class="h-big" data-k="h1-' + id + '">Fortsetzung<span class="dot">.</span></h2>' +
+          '<div id="wr-' + id + '">' +
+          '<div class="row"><div class="when" data-k="wt-' + id + '">Zeitraum</div>' +
+          '<div><div class="role" data-k="rt-' + id + '">Position</div>' +
+          '<div class="org" data-k="ot-' + id + '">Organisation</div></div></div></div>' +
+          '<div class="cv-foot"><span data-k="place-' + id + '">Ort, Datum</span>' +
+          '<span class="sig" data-k="sig-' + id + '">Melanie Kerner</span></div>' +
+          '</div></div>';
+      } else if (type === 'free') {
+        page.innerHTML = sharedHdr(id, 'Anlage') +
+          '<div class="free-body">' +
+          '<span class="boxlabel" style="margin-bottom:4mm" data-k="ftitle-' + id + '">Anlage</span>' +
+          '<div class="free-content" data-k="fbody-' + id + '">Inhalt dieser Seite …</div>' +
+          '</div>';
+      } else {
+        page.innerHTML =
+          '<div class="free-body" style="padding-top:0">' +
+          '<div class="free-content" data-k="blank-' + id + '">Freier Inhalt …</div>' +
+          '</div>';
+      }
+      return wrap;
+    }
+
+    /* ============================================================
+       Activate editing for one page-wrap
+       ============================================================ */
+    function activatePageWrap(wrap) {
+      wirePageWrap(wrap);
+      var page = wrap.querySelector('.page');
+      if (!page) return;
+      // Letter para containers (id starts with "letter-paras" or "lp-")
+      page.querySelectorAll('[id^="letter-paras"],[id^="lp-"]').forEach(function (c) {
+        refreshLetterControls(c);
+      });
+      // Werdegang rows
+      page.querySelectorAll('[id^="cv-werdegang"],[id^="wr-"]').forEach(function (c) {
+        refreshRowControls(c, newWerdegangRow);
+      });
+      // Kenntnisse rows
+      page.querySelectorAll('[id^="cv-kenntnisse"]').forEach(function (c) {
+        refreshRowControls(c, newKenntnisseRow);
+      });
+      // Sidebar sections
+      page.querySelectorAll('.side .sec').forEach(refreshSideSecControls);
+    }
+
+    function removeAllEditControls() {
+      workspace.querySelectorAll('.ec-add, .ec-del, .row-del-wrap').forEach(function (n) { n.remove(); });
+    }
+
+    /* ============================================================
+       Edit mode
+       ============================================================ */
+    var btnEdit = document.getElementById('btnEdit');
+    var btnPdf  = document.getElementById('btnPdf');
+    var btnReset = document.getElementById('btnReset');
+
+    function setEditing(on) {
+      editing = on;
+      document.body.classList.toggle('editing', on);
+      btnEdit.classList.toggle('active', on);
+      btnEdit.innerHTML = on ? '✓ Fertig' : '✎ Bearbeiten';
+      workspace.querySelectorAll('[data-k]').forEach(function (el) {
+        el.contentEditable = on ? 'true' : 'false';
+      });
+      if (on) {
+        getPageWraps().forEach(activatePageWrap);
+        rebuildAddZones();
+      } else {
+        removeAllEditControls();
+        workspace.querySelectorAll('.page-add-zone').forEach(function (z) { z.remove(); });
+        save();
+      }
+    }
+
+    btnEdit.addEventListener('click', function () {
+      if (!editing) {
+        // Require password unless already authenticated this session
+        if (sessionStorage.getItem('bw-auth') === '1') {
+          setEditing(true);
+        } else {
+          overlay.classList.remove('hidden');
+          setTimeout(function () { pwInput.focus(); }, 50);
+        }
+      } else {
+        setEditing(false);
+      }
+    });
+
+    document.addEventListener('input', function (e) {
+      if (e.target && e.target.closest && e.target.closest('[data-k]')) save();
+    });
+
+    btnPdf.addEventListener('click', function () {
+      if (editing) setEditing(false);
+      setTimeout(function () { window.print(); }, 80);
+    });
+
+    btnReset.addEventListener('click', function () {
+      if (!confirm('Alle Änderungen löschen und zur Originalversion zurückkehren?')) return;
+      try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+      location.reload();
+    });
+
+    // Wire existing page wraps (for delete + side toggle) on initial load
+    // (runs after loadSaved so restored HTML is also wired)
+    getPageWraps().forEach(wirePageWrap);
+
+  })();
   </script>
 </body>
 </html>
