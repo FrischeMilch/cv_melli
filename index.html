@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="de"><head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bewerbungsmappe — Melanie Kerner</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&amp;display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
 <script src="image-slot.js"></script>
 <style>
   :root {
@@ -237,7 +238,7 @@
   .tasks { columns: 2; column-gap: 6mm; list-style: none; margin: 2mm 0 0; padding: 0; }
   .tasks li { font-size: 8.4pt; line-height: 1.28; color: var(--soft);
     padding-left: 4mm; position: relative; margin-bottom: .6mm; break-inside: avoid; }
-  .tasks li::before { content: "•"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
+  .tasks li::before { content: "\2022"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
   #cv-werdegang-rows, #cv-kenntnisse-rows { display: flex; flex-direction: column; }
   .cv-foot { margin-top: auto; padding-top: 3mm; border-top: 2px solid var(--ink);
     display: flex; justify-content: space-between; align-items: baseline;
@@ -311,15 +312,15 @@
     .boxlabel { border-color: #1d1d1a !important; color: #1d1d1a !important; }
   }
 </style>
-<style type="text/css"></style></head>
+</head>
 <body>
 
   <!-- ===================== PASSWORT-OVERLAY ===================== -->
-  <div id="pw-overlay" class="hidden">
-    <div class="pw-card" data-protonpass-form="" style="">
+  <div id="pw-overlay">
+    <div class="pw-card">
       <h2>🔒 Bearbeitungsmodus</h2>
       <p>Bitte gib das Passwort ein, um Änderungen vorzunehmen.</p>
-      <input type="password" id="pw-input" placeholder="Passwort …" autocomplete="current-password" style="">
+      <input type="password" id="pw-input" placeholder="Passwort …" autocomplete="current-password" />
       <div class="pw-error" id="pw-error">Falsches Passwort. Bitte erneut versuchen.</div>
       <button id="pw-submit">Entsperren</button>
     </div>
@@ -351,8 +352,8 @@
           <div class="hd-top">
             <div class="tag"><span class="sq"></span><span data-k="cov-tag">Bewerbungsunterlagen</span></div>
             <div class="hd-addr">
-              <span data-k="cov-adr">Salzlachenweg 22, 86706 Weichering</span><br>
-              <span class="lab">E:</span> <span data-k="cov-mail">Melanieseeger-1980@web.de</span><br>
+              <span data-k="cov-adr">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="cov-mail">Melanieseeger-1980@web.de</span><br />
               <span class="lab">P:</span> <span data-k="cov-mob">0176 54149800</span>
             </div>
           </div>
@@ -363,7 +364,7 @@
           <div class="cover-left">
             <span class="boxlabel" data-k="cov-lbl1">Worum es geht</span>
             <p class="cover-sub" data-k="cov-sub">Ausbildungsbegleitender Praktikumsplatz zur Umschulung zur Kauffrau für Büromanagement mit SAP, in Teilzeit — in der Gemeindeverwaltung Weichering.</p>
-            <span class="boxlabel mt" data-k="cov-lbl2">test</span>
+            <span class="boxlabel mt" data-k="cov-lbl2">Zeitraum</span>
             <p class="cover-period" data-k="cov-period">18.01.2021 – 14.07.2022</p>
             <span class="boxlabel mt" data-k="cov-lbl3">Inhalt</span>
             <ul class="inhalt">
@@ -380,7 +381,7 @@
             <div class="who">
               <div class="who-name" data-k="cov-name">Melanie Kerner</div>
               <div class="who-lines">
-                <span data-k="cov-adr2">Salzlachenweg 22<br>86706 Weichering</span><br>
+                <span data-k="cov-adr2">Salzlachenweg 22<br />86706 Weichering</span><br />
                 <span class="lab">P:</span> <span data-k="cov-mob2">0176 54149800</span>
               </div>
             </div>
@@ -402,8 +403,8 @@
           <div class="hd-top">
             <div class="tag"><span class="sq"></span><span data-k="l-tag">Anschreiben</span></div>
             <div class="hd-addr">
-              <span data-k="l-adr">Salzlachenweg 22, 86706 Weichering</span><br>
-              <span class="lab">E:</span> <span data-k="l-mail">Melanieseeger-1980@web.de</span><br>
+              <span data-k="l-adr">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="l-mail">Melanieseeger-1980@web.de</span><br />
               <span class="lab">P:</span> <span data-k="l-phone">08454 911194 · 0176 54149800</span>
             </div>
           </div>
@@ -414,14 +415,14 @@
           <div class="l-addr">
             <div class="recipient">
               <span class="boxlabel l-to-label" data-k="l-rec-lbl">Empfänger</span>
-              <div class="to" data-k="l-rec">Gemeinde Weichering<br>Erster Bürgermeister<br><strong>Herr Thomas Mack</strong><br>Kapellenplatz 3<br>86706 Weichering</div>
+              <div class="to" data-k="l-rec">Gemeinde Weichering<br />Erster Bürgermeister<br /><strong>Herr Thomas Mack</strong><br />Kapellenplatz 3<br />86706 Weichering</div>
             </div>
             <div class="l-date" data-k="l-date">Weichering, 04.03.2020</div>
           </div>
           <h3 class="l-subject" data-k="l-subject">Bewerbung um eine Praktikumsstelle als Kauffrau für Büromanagement (IHK) — Praktikumszeitraum 18.01.2021 bis 14.07.2022</h3>
           <div id="letter-paras">
             <p class="body l-salut" data-k="l-salut">Sehr geehrter Herr Mack,</p>
-            <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück" dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
+            <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück“ dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
             <p class="body" data-k="l-p2">Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
             <p class="body" data-k="l-p3">Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
             <p class="body" data-k="l-p4">Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
@@ -440,7 +441,7 @@
       <div class="page-ctrl-bar">
         <span class="page-label">Lebenslauf</span>
         <div class="ctrl-btns">
-          <button class="side-toggle-btn" data-target=".cv-grid">◧ Spalte ausblenden</button>
+          <button class="side-toggle-btn" data-target=".cv-grid">▧ Spalte ausblenden</button>
           <button class="page-del-btn">× Seite löschen</button>
         </div>
       </div>
@@ -449,8 +450,8 @@
           <div class="hd-top">
             <div class="tag"><span class="sq"></span><span data-k="cv-tag">Lebenslauf</span></div>
             <div class="hd-addr">
-              <span data-k="cv-adr0">Salzlachenweg 22, 86706 Weichering</span><br>
-              <span class="lab">E:</span> <span data-k="cv-mail0">Melanieseeger-1980@web.de</span><br>
+              <span data-k="cv-adr0">Salzlachenweg 22, 86706 Weichering</span><br />
+              <span class="lab">E:</span> <span data-k="cv-mail0">Melanieseeger-1980@web.de</span><br />
               <span class="lab">P:</span> <span data-k="cv-phone0">0176 54149800</span>
             </div>
           </div>
@@ -464,7 +465,7 @@
             </div>
             <div class="sec">
               <span class="boxlabel" data-k="cv-sec-kontakt">Kontakt</span>
-              <div class="s-row"><div class="s-k" data-k="cv-sk-adr">Adresse</div><div class="s-v" data-k="cv-adr">Salzlachenweg 22<br>86706 Weichering</div></div>
+              <div class="s-row"><div class="s-k" data-k="cv-sk-adr">Adresse</div><div class="s-v" data-k="cv-adr">Salzlachenweg 22<br />86706 Weichering</div></div>
               <div class="s-row"><div class="s-k" data-k="cv-sk-tel">Telefon</div><div class="s-v" data-k="cv-tel">08454 911194</div></div>
               <div class="s-row"><div class="s-k" data-k="cv-sk-mob">Mobil</div><div class="s-v" data-k="cv-mob">0176 54149800</div></div>
               <div class="s-row"><div class="s-k" data-k="cv-sk-mail">E-Mail</div><div class="s-v" data-k="cv-mail"><a href="mailto:Melanieseeger-1980@web.de">Melanieseeger-1980@web.de</a></div></div>
@@ -1039,7 +1040,6 @@
       if (!sessionStorage.getItem('bw-auth')) {
         overlay.classList.remove('hidden');
         setTimeout(function () { pwInput.focus(); }, 50);
-        // Set a flag so after password success we trigger publish
         sessionStorage.setItem('bw-pending-publish', '1');
         return;
       }
@@ -1059,45 +1059,50 @@
       try {
         if (editing) setEditing(false);
         var html = buildPublishHTML();
-        var API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO +
-                  '/contents/' + PUBLISH_FILE;
-
-        // Get current SHA (file may not exist yet)
-        var r1 = await fetch(API + '?ref=' + PUBLISH_BRANCH, {
-          headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' }
-        });
-        var sha = null;
-        if (r1.ok) {
-          sha = (await r1.json()).sha;
-        } else if (r1.status === 401) {
-          localStorage.removeItem('bw-gh-token');
-          throw new Error('Token ungültig oder abgelaufen. Bitte neu eingeben.');
-        } else if (r1.status !== 404) {
-          throw new Error('GitHub API Fehler: ' + r1.status);
-        }
 
         // UTF-8 → base64 (handles German umlauts)
-        var encoded = btoa(unescape(encodeURIComponent(html)));
+        var bytes = new TextEncoder().encode(html);
+        var binStr = Array.from(bytes, function (b) { return String.fromCharCode(b); }).join('');
+        var encoded = btoa(binStr);
 
-        var body = {
-          message: 'Bewerbung aktualisiert (' + new Date().toLocaleDateString('de-DE') + ')',
-          content: encoded,
-          branch: PUBLISH_BRANCH
-        };
-        if (sha) body.sha = sha;
+        var API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO +
+                  '/contents/' + PUBLISH_FILE;
+        var GH_HEADERS = { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' };
 
-        var r2 = await fetch(API, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + pat,
-            'Accept': 'application/vnd.github+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
+        async function getCurrentSha() {
+          var r = await fetch(API + '?ref=' + PUBLISH_BRANCH + '&t=' + Date.now(), { headers: GH_HEADERS });
+          if (r.ok) return (await r.json()).sha;
+          if (r.status === 401) { localStorage.removeItem('bw-gh-token'); throw new Error('Token ungültig oder abgelaufen. Bitte neu eingeben.'); }
+          if (r.status === 404) return null;
+          throw new Error('GitHub API Fehler beim Lesen: ' + r.status);
+        }
+
+        async function doPut(sha) {
+          var body = {
+            message: 'Bewerbung aktualisiert (' + new Date().toLocaleDateString('de-DE') + ')',
+            content: encoded,
+            branch: PUBLISH_BRANCH
+          };
+          if (sha) body.sha = sha;
+          return fetch(API, {
+            method: 'PUT',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, GH_HEADERS),
+            body: JSON.stringify(body)
+          });
+        }
+
+        // Fetch fresh SHA, attempt PUT, retry once on conflict (409)
+        var sha = await getCurrentSha();
+        var r2 = await doPut(sha);
+
+        if (r2.status === 409) {
+          // SHA stale — refetch and retry
+          sha = await getCurrentSha();
+          r2 = await doPut(sha);
+        }
 
         if (!r2.ok) {
-          var errData = await r2.json();
+          var errData = await r2.json().catch(function () { return {}; });
           if (r2.status === 401) localStorage.removeItem('bw-gh-token');
           throw new Error(errData.message || 'HTTP ' + r2.status);
         }
@@ -1121,5 +1126,5 @@
 
   })();
   </script>
-
-<protonpass-root-4721 data-protonpass-role="root" data-protonpass-theme="os"></protonpass-root-4721></body></html>
+</body>
+</html>
