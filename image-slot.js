@@ -130,7 +130,21 @@
     _restore () {
       const store = loadStore();
       const s = store[this.slotId];
-      if (!s) return;
+      if (!s) {
+        const attr = this.getAttribute('data-state');
+        if (attr) {
+          try {
+            const a = JSON.parse(attr);
+            this._src  = a.src;
+            this._zoom = a.zoom ?? 1;
+            this._ox   = a.ox   ?? 0.5;
+            this._oy   = a.oy   ?? 0.5;
+            this._render();
+            this._persist();
+          } catch {}
+        }
+        return;
+      }
       this._src  = s.src;
       this._zoom = s.zoom ?? 1;
       this._ox   = s.ox   ?? 0.5;
