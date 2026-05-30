@@ -1207,25 +1207,28 @@
       var saved = toRemove.map(function (n) { return { el: n, parent: n.parentNode, next: n.nextSibling }; });
       toRemove.forEach(function (n) { n.remove(); });
 
-      // Embed image data into image-slot elements before cloning
-      var imgStore = {};
-      try { imgStore = JSON.parse(localStorage.getItem('.image-slots.state.json') || '{}'); } catch (e) {}
-      document.querySelectorAll('image-slot[id]').forEach(function (slot) {
-        var state = imgStore[slot.id];
-        if (state && state.src) {
-          slot.setAttribute('data-state', JSON.stringify(state));
-        }
-      });
-
       var clone = document.documentElement.cloneNode(true);
-
-      // Remove data-state from live DOM (only needed in published HTML)
-      document.querySelectorAll('image-slot[data-state]').forEach(function (slot) {
-        slot.removeAttribute('data-state');
-      });
 
       // Restore controls to live DOM
       saved.forEach(function (s) { if (s.parent) s.parent.insertBefore(s.el, s.next); });
+
+      // Embed image data as a JSON script block in the clone
+      var imgStore = {};
+      try { imgStore = JSON.parse(localStorage.getItem('.image-slots.state.json') || '{}'); } catch (e) {}
+      var hasImages = Object.keys(imgStore).some(function (k) { return imgStore[k] && imgStore[k].src; });
+      if (hasImages) {
+        var existingScript = clone.querySelector('#embedded-images');
+        if (existingScript) existingScript.remove();
+        var script = clone.ownerDocument.createElement('script');
+        script.id = 'embedded-images';
+        script.type = 'application/json';
+        script.textContent = JSON.stringify(imgStore);
+        var cloneBody = clone.querySelector('body');
+        if (cloneBody) cloneBody.appendChild(script);
+      }
+
+      // Remove any data-state attributes (old approach)
+      clone.querySelectorAll('image-slot[data-state]').forEach(function (s) { s.removeAttribute('data-state'); });
 
       // Clean clone
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
