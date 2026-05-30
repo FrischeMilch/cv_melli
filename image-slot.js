@@ -128,7 +128,18 @@
 
     // ── restore from storage ───────────────────────────────────────────────────
     _restore () {
-      // 1. Check embedded image data (from published HTML — always freshest cross-device)
+      // 1. localStorage has highest priority (user's latest edits on this device)
+      const store = loadStore();
+      const s = store[this.slotId];
+      if (s && s.src) {
+        this._src  = s.src;
+        this._zoom = s.zoom ?? 1;
+        this._ox   = s.ox   ?? 0.5;
+        this._oy   = s.oy   ?? 0.5;
+        this._render();
+        return;
+      }
+      // 2. Check embedded image data (published HTML — fallback for new devices)
       const embedded = document.getElementById('embedded-images');
       if (embedded) {
         try {
@@ -140,12 +151,11 @@
             this._ox   = e.ox   ?? 0.5;
             this._oy   = e.oy   ?? 0.5;
             this._render();
-            this._persist();
             return;
           }
         } catch {}
       }
-      // 2. Check data-state attribute (legacy)
+      // 3. Check data-state attribute (fallback for new devices)
       const attr = this.getAttribute('data-state');
       if (attr) {
         try {
@@ -156,20 +166,10 @@
             this._ox   = a.ox   ?? 0.5;
             this._oy   = a.oy   ?? 0.5;
             this._render();
-            this._persist();
             return;
           }
         } catch {}
       }
-      // 3. Fallback to localStorage
-      const store = loadStore();
-      const s = store[this.slotId];
-      if (!s) return;
-      this._src  = s.src;
-      this._zoom = s.zoom ?? 1;
-      this._ox   = s.ox   ?? 0.5;
-      this._oy   = s.oy   ?? 0.5;
-      this._render();
     }
 
     _persist () {
