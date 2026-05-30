@@ -33,7 +33,6 @@
     box-shadow: 0 12px 48px rgba(29,29,26,.3);
     display: flex; flex-direction: column; gap: 14px;
   }
-  .pw-card h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); }
   .pw-card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
   .pw-card input {
     font-family: var(--body); font-size: 14px; font-weight: 600;
@@ -41,6 +40,14 @@
     outline: none; color: var(--ink); background: #fff;
   }
   .pw-card input:focus { border-color: var(--green); }
+  .pw-card-header { display: flex; align-items: center; justify-content: space-between; }
+  .pw-card-header h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); }
+  .pw-close {
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: var(--muted); font-size: 20px; line-height: 1; border-radius: 6px;
+    transition: color .15s, background .15s;
+  }
+  .pw-close:hover { color: var(--ink); background: var(--chip); }
   .pw-card button {
     font-family: var(--body); font-size: 13px; font-weight: 700;
     background: var(--green); color: #fff; border: none;
@@ -281,6 +288,34 @@
   .row-del-wrap { display: none; grid-column: 1 / -1; }
   body.editing .row-del-wrap { display: flex; padding-bottom: 2px; }
 
+  /* ---- Mobile ---- */
+  @media (max-width: 700px) {
+    :root { --page-w: 100vw; --pad: 5mm; --gap: 4mm; }
+    .workspace { padding: 72px 0 32px; gap: 0; }
+    .page-wrap { width: 100%; margin-bottom: 8px; }
+    .page {
+      width: 100% !important; min-height: unset !important; height: auto !important;
+      border-radius: 0; box-shadow: none;
+      padding: var(--pad);
+      font-size: 9pt;
+    }
+    /* Toolbar: scrollable row on small screens */
+    .toolbar {
+      top: 8px; left: 8px; right: 8px; transform: none;
+      width: auto; max-width: 100%;
+      overflow-x: auto; flex-wrap: nowrap;
+      padding: 6px 10px;
+      border-radius: 14px;
+    }
+    .toolbar .tb-brand { display: none; }
+    .toolbar button { font-size: 11px; padding: 6px 10px; }
+    /* Password card */
+    .pw-card { width: calc(100vw - 32px); padding: 24px 20px; }
+    /* Editing hint */
+    .editing-hint { font-size: 10px; left: 8px; right: 8px; transform: none;
+      text-align: center; white-space: normal; width: auto; }
+  }
+
   /* ---- Print ---- */
   @page { size: A4; margin: 0; }
   @media print {
@@ -317,7 +352,10 @@
   <!-- ===================== PASSWORT-OVERLAY ===================== -->
   <div id="pw-overlay" class="hidden">
     <div class="pw-card" data-protonpass-form="" style="">
-      <h2>🔒 Bearbeitungsmodus</h2>
+      <div class="pw-card-header">
+        <h2>🔒 Bearbeitungsmodus</h2>
+        <button class="pw-close" id="pw-close" title="Schließen">✕</button>
+      </div>
       <p>Bitte gib das Passwort ein, um Änderungen vorzunehmen.</p>
       <input type="password" id="pw-input" placeholder="Passwort …" autocomplete="current-password" style="">
       <div class="pw-error" id="pw-error">Falsches Passwort. Bitte erneut versuchen.</div>
@@ -554,6 +592,11 @@
     }
     document.getElementById('pw-submit').addEventListener('click', checkPassword);
     pwInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') checkPassword(); });
+    document.getElementById('pw-close').addEventListener('click', function () {
+      overlay.classList.add('hidden');
+      pwInput.value = '';
+      pwError.classList.remove('show');
+    });
 
     /* ============================================================
        Persistence
