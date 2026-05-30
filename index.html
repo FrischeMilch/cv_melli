@@ -78,6 +78,17 @@
   .toolbar button.danger { border-color: rgba(192,57,43,.3); color: var(--red); }
   .toolbar button.danger:hover { background: var(--red); color: #fff; border-color: var(--red); }
 
+  .publish-status {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 199;
+    font-family: var(--body); font-size: 11px; color: var(--muted);
+    background: rgba(255,255,255,.85); backdrop-filter: blur(8px);
+    padding: 4px 14px; border-radius: 999px;
+    border: 1px solid rgba(29,29,26,.06);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+    white-space: nowrap;
+  }
+  .publish-status.visible { opacity: 1; }
+
   .editing-hint {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 200;
     background: var(--ink); color: #f5f2ea; font-size: 11.5px; font-weight: 500;
@@ -301,6 +312,7 @@
     }
     .toolbar .tb-brand { display: none; }
     .toolbar button { font-size: 12px; padding: 6px 11px; flex-shrink: 0; }
+    .publish-status { top: auto; bottom: 46px; left: 8px; right: 8px; transform: none; text-align: center; }
 
     /* Workspace: Platz für Toolbar (2 Reihen ≈ 80px) */
     .workspace { padding-top: 90px; }
@@ -322,7 +334,7 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
     html, body { background: #fff; }
-    .toolbar, .editing-hint, #pw-overlay, #btnPublish, #btnReset { display: none !important; }
+    .toolbar, .editing-hint, .publish-status, #pw-overlay, #btnPublish, #btnReset { display: none !important; }
     .workspace { gap: 0; padding: 0; }
     .page-wrap { margin-bottom: 0; }
     .page { box-shadow: none; break-after: page; height: var(--page-h) !important;
@@ -370,6 +382,7 @@
     <button id="btnPublish">↑ Veröffentlichen</button>
     <button id="btnPdf" class="primary">↓ Als PDF speichern</button>
   </div>
+  <div class="publish-status" id="publishStatus"></div>
   <div class="editing-hint">Bearbeitungsmodus — Texte anklicken · + Zeilen/Absätze hinzufügen · × löschen</div>
 
   <!-- ===================== WORKSPACE ===================== -->
@@ -594,8 +607,15 @@
     function loadSaved() {
       try {
         var saved = localStorage.getItem(STORE_KEY);
-        if (saved) {
-          workspace.innerHTML = JSON.parse(saved);
+        if (!saved) return;
+        var parsed = JSON.parse(saved);
+        var savedHtml = typeof parsed === 'string' ? parsed : parsed.html;
+        var savedTs   = (typeof parsed === 'object' && parsed.ts) ? parsed.ts : 0;
+        var pubMeta   = document.querySelector('meta[name="publish-date"]');
+        var pubTs     = pubMeta ? parseInt(pubMeta.getAttribute('content'), 10) || 0 : 0;
+        if (pubTs && savedTs && pubTs > savedTs) return;
+        if (savedHtml) {
+          workspace.innerHTML = savedHtml;
           sanitizeHTML(workspace);
         }
       } catch (e) {}
@@ -606,11 +626,31 @@
       sanitizeHTML(clone);
       clone.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .page-add-zone, .task-ctrl').forEach(function (n) { n.remove(); });
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(clone.innerHTML)); } catch (e) {}
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({ html: clone.innerHTML, ts: Date.now() }));
+      } catch (e) {
+        console.warn('Speichern fehlgeschlagen (localStorage voll?):', e.message);
+      }
     }
 
     loadSaved();
     sanitizeHTML(workspace);
+
+    // Show publish timestamp if available
+    var publishStatusEl = document.getElementById('publishStatus');
+    function showPublishDate(ts) {
+      if (!publishStatusEl || !ts) return;
+      var d = new Date(ts);
+      var pad = function (n) { return n < 10 ? '0' + n : n; };
+      publishStatusEl.textContent = 'Zuletzt veröffentlicht: ' +
+        pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear() +
+        ' um ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' Uhr';
+      publishStatusEl.classList.add('visible');
+    }
+    (function () {
+      var meta = document.querySelector('meta[name="publish-date"]');
+      if (meta) showPublishDate(parseInt(meta.getAttribute('content'), 10));
+    })();
 
     /* ============================================================
        Helpers
@@ -1176,7 +1216,21 @@
         }
       });
 
+      // Set publish timestamp meta before cloning
+      var pubMeta = document.querySelector('meta[name="publish-date"]');
+      if (!pubMeta) {
+        pubMeta = document.createElement('meta');
+        pubMeta.name = 'publish-date';
+        document.head.appendChild(pubMeta);
+      }
+      var publishTs = Date.now();
+      pubMeta.setAttribute('content', String(publishTs));
+
       var clone = document.documentElement.cloneNode(true);
+
+      // Remove publish-date meta from live DOM (only in published HTML)
+      var liveMeta = document.querySelector('meta[name="publish-date"]');
+      if (liveMeta) liveMeta.remove();
 
       // Remove data-state from live DOM (only needed in published HTML)
       document.querySelectorAll('image-slot[data-state]').forEach(function (slot) {
@@ -1190,9 +1244,35 @@
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
       sanitizeHTML(clone);
 
-      // Remove body.editing class from clone
       var cloneBody = clone.querySelector('body');
+      var cloneHead = clone.querySelector('head');
+
+      // Remove body.editing class from clone
       if (cloneBody) cloneBody.classList.remove('editing');
+
+      // --- Clean up browser extension artifacts ---
+      // Remove empty <style> tags injected by extensions
+      if (cloneHead) {
+        cloneHead.querySelectorAll('style:empty, style[type="text/css"]:empty').forEach(function (s) {
+          if (!s.textContent.trim()) s.remove();
+        });
+      }
+      // Remove extension-injected scripts (not our own inline script or image-slot.js)
+      clone.querySelectorAll('script[src]:not([src="image-slot.js"])').forEach(function (s) { s.remove(); });
+      // Remove extension data attributes
+      clone.querySelectorAll('[data-protonpass-form]').forEach(function (el) { el.removeAttribute('data-protonpass-form'); });
+
+      // --- Embed images as JSON script block (most reliable method) ---
+      var oldEmbed = clone.querySelector('#embedded-images');
+      if (oldEmbed) oldEmbed.remove();
+      var hasImages = Object.keys(imgStore).some(function (k) { return imgStore[k] && imgStore[k].src; });
+      if (hasImages && cloneBody) {
+        var embedScript = clone.ownerDocument.createElement('script');
+        embedScript.id = 'embedded-images';
+        embedScript.type = 'application/json';
+        embedScript.textContent = JSON.stringify(imgStore);
+        cloneBody.appendChild(embedScript);
+      }
 
       // Reset overlay state
       var ov = clone.querySelector('#pw-overlay');
@@ -1205,6 +1285,10 @@
       // Publish button must not show "loading" state
       var pb = clone.querySelector('#btnPublish');
       if (pb) { pb.textContent = '↑ Veröffentlichen'; pb.disabled = false; pb.removeAttribute('style'); }
+
+      // Reset publish status text (will be populated from meta on load)
+      var ps = clone.querySelector('#publishStatus');
+      if (ps) { ps.textContent = ''; ps.classList.remove('visible'); }
 
       return '<!DOCTYPE html>\n' + clone.outerHTML;
     }
@@ -1291,8 +1375,12 @@
           await putFile('image-slot.js', jsSource, 'image-slot.js aktualisiert (' + dateStr + ')');
         }
 
+        // Update localStorage timestamp to match published version
+        save();
+
         btn.textContent = '✓ Veröffentlicht!';
         btn.style.cssText = 'background:var(--green);color:#fff;border-color:var(--green)';
+        showPublishDate(Date.now());
         setTimeout(function () {
           btn.textContent = '↑ Veröffentlichen';
           btn.disabled = false;
