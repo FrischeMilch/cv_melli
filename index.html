@@ -329,7 +329,7 @@
       min-height: unset !important; overflow: hidden !important; }
     .page:last-child { break-after: auto; }
     [data-k] { outline: none !important; background: none !important; }
-    .page-ctrl-bar, .page-add-zone, .ec-add, .ec-del, .row-del-wrap { display: none !important; }
+    .page-ctrl-bar, .page-add-zone, .ec-add, .ec-del, .row-del-wrap, .task-ctrl { display: none !important; }
 
     /* Explizite Farberhaltung für dekorierte Elemente */
     .tag .sq { background: #2e7d50 !important; }
@@ -534,7 +534,7 @@
                 <ul class="tasks">
                   <li data-k="t1">Kundenberatung</li><li data-k="t2">Warenpräsentation</li>
                   <li data-k="t3">Wareneingang &amp; Lieferscheine</li><li data-k="t4">Kasse, Tresor &amp; Abrechnung</li>
-                  <li data-k="t5">Inventur</li><li data-k="t6"><br></li>
+                  <li data-k="t5">Inventur</li><li data-k="t6">Mitarbeitereinsatzplanung</li>
                 </ul>
               </div></div>
               <div class="row"><div class="when" data-k="w6">11.2011 — 05.2012</div><div><div class="role" data-k="r6">Pflegehilfskraft (Teilzeit)</div><div class="org" data-k="o6">Sonnen Team, Neuburg</div></div></div>
@@ -612,7 +612,7 @@
 
     function save() {
       var clone = workspace.cloneNode(true);
-      clone.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .page-add-zone').forEach(function (n) { n.remove(); });
+      clone.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .page-add-zone, .task-ctrl').forEach(function (n) { n.remove(); });
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
       try { localStorage.setItem(STORE_KEY, JSON.stringify(clone.innerHTML)); } catch (e) {}
     }
@@ -646,7 +646,7 @@
         var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
     }
     function stripCtrl(parent) {
-      parent.querySelectorAll('.ec-add, .ec-del, .row-del-wrap').forEach(function (n) { n.remove(); });
+      parent.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .task-ctrl').forEach(function (n) { n.remove(); });
     }
     function setEditable(el, on) { el.querySelectorAll('[data-k]').forEach(function (n) { n.contentEditable = on ? 'true' : 'false'; }); }
 
@@ -726,19 +726,20 @@
 
     /* Aufgabenstichpunkte innerhalb einer Werdegang-Zeile */
     function refreshTaskControls(row) {
-      // Remove only task-related controls inside this row
-      row.querySelectorAll('.ec-add.task-add, .ec-del.task-del, .task-add-list-btn').forEach(function (n) { n.remove(); });
-
-      var inner = row.querySelector(':scope > div:last-child');
+      var inner = row.querySelector(':scope > div:last-of-type');
       if (!inner) return;
+
+      // Entferne alle vorherigen Task-Controls
+      inner.querySelectorAll('.task-ctrl').forEach(function (n) { n.remove(); });
+
       var tasksList = inner.querySelector(':scope > .tasks');
 
       if (!tasksList) {
-        // Show a button to add a task list
+        // Zeige "+ Aufgaben" Button direkt unter Firma
         var addListBtn = document.createElement('button');
-        addListBtn.className = 'ec-del task-add-list-btn';
+        addListBtn.className = 'ec-del task-ctrl';
         addListBtn.type = 'button';
-        addListBtn.innerHTML = '+ Aufgaben';
+        addListBtn.textContent = '+ Aufgaben';
         addListBtn.style.cssText = 'margin-top:2mm; border-color:rgba(46,125,80,.4); color:var(--green); background:rgba(46,125,80,.06);';
         addListBtn.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -749,50 +750,83 @@
           if (editing) li.contentEditable = 'true';
           li.textContent = 'Aufgabe …';
           ul.appendChild(li);
-          inner.appendChild(ul);
+          // Immer direkt nach .org einfügen
+          var org = inner.querySelector('.org');
+          if (org) org.insertAdjacentElement('afterend', ul);
+          else inner.appendChild(ul);
           refreshTaskControls(row); save(); focusEl(li);
         });
         inner.appendChild(addListBtn);
         return;
       }
 
-      // Wire add/del buttons for existing tasks list
+      // Existierende Tasks: Add/Del Buttons
       var items = Array.from(tasksList.querySelectorAll(':scope > li'));
 
-      function insertTask(beforeEl) {
+      function insertTask(ref) {
         var li = document.createElement('li');
         li.dataset.k = 'ti-' + uid();
         if (editing) li.contentEditable = 'true';
         li.textContent = 'Aufgabe …';
-        tasksList.insertBefore(li, beforeEl);
+        tasksList.insertBefore(li, ref.nextSibling || null);
         refreshTaskControls(row); save(); focusEl(li);
       }
 
-      // Top add
+      // Wrapper für Controls unter der Liste
+      var ctrlWrap = document.createElement('div');
+      ctrlWrap.className = 'task-ctrl';
+      ctrlWrap.style.cssText = 'display:flex; flex-wrap:wrap; gap:3px; margin-top:1mm;';
+
+      // + Button oben (in Liste)
       var topAdd = document.createElement('button');
-      topAdd.className = 'ec-add task-add'; topAdd.type = 'button';
+      topAdd.className = 'ec-add task-ctrl'; topAdd.type = 'button';
       topAdd.innerHTML = '<span>+</span>';
-      topAdd.addEventListener('click', function (e) { e.stopPropagation(); insertTask(topAdd); });
+      topAdd.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var li = document.createElement('li');
+        li.dataset.k = 'ti-' + uid();
+        if (editing) li.contentEditable = 'true';
+        li.textContent = 'Aufgabe …';
+        tasksList.insertBefore(li, tasksList.firstChild);
+        refreshTaskControls(row); save(); focusEl(li);
+      });
       tasksList.insertBefore(topAdd, tasksList.firstChild);
 
-      items.forEach(function (li) {
+      items.forEach(function (li, i) {
+        // Delete button als Chip
         var del = document.createElement('button');
-        del.className = 'ec-del task-del'; del.type = 'button';
-        del.innerHTML = '× Aufgabe';
+        del.className = 'ec-del task-ctrl';
+        del.type = 'button';
+        del.textContent = '× ' + (li.textContent || 'Aufgabe').substring(0, 20);
         del.addEventListener('click', function (e) {
           e.stopPropagation();
           li.remove();
-          if (tasksList.querySelectorAll(':scope > li').length === 0) tasksList.remove();
+          if (tasksList.querySelectorAll(':scope > li').length === 0) {
+            tasksList.remove();
+          }
           refreshTaskControls(row); save();
         });
-        li.insertAdjacentElement('afterend', del);
-
-        var aAfter = document.createElement('button');
-        aAfter.className = 'ec-add task-add'; aAfter.type = 'button';
-        aAfter.innerHTML = '<span>+</span>';
-        aAfter.addEventListener('click', function (e) { e.stopPropagation(); insertTask(aAfter); });
-        del.insertAdjacentElement('afterend', aAfter);
+        ctrlWrap.appendChild(del);
       });
+
+      // + Aufgabe hinzufügen
+      var addBtn = document.createElement('button');
+      addBtn.className = 'ec-del task-ctrl';
+      addBtn.type = 'button';
+      addBtn.textContent = '+ Aufgabe';
+      addBtn.style.cssText = 'border-color:rgba(46,125,80,.4); color:var(--green); background:rgba(46,125,80,.06);';
+      addBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var li = document.createElement('li');
+        li.dataset.k = 'ti-' + uid();
+        if (editing) li.contentEditable = 'true';
+        li.textContent = 'Aufgabe …';
+        tasksList.appendChild(li);
+        refreshTaskControls(row); save(); focusEl(li);
+      });
+      ctrlWrap.appendChild(addBtn);
+
+      tasksList.insertAdjacentElement('afterend', ctrlWrap);
     }
     function newKenntnisseRow() {
       var id = uid(); var d = document.createElement('div'); d.className = 'row';
@@ -1055,7 +1089,7 @@
     }
 
     function removeAllEditControls() {
-      workspace.querySelectorAll('.ec-add, .ec-del, .row-del-wrap').forEach(function (n) { n.remove(); });
+      workspace.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .task-ctrl').forEach(function (n) { n.remove(); });
     }
 
     /* ============================================================
@@ -1126,7 +1160,7 @@
 
     function buildPublishHTML() {
       // Temporarily pull edit controls out of DOM so clone is clean
-      var toRemove = Array.from(document.querySelectorAll('.ec-add,.ec-del,.row-del-wrap,.page-add-zone'));
+      var toRemove = Array.from(document.querySelectorAll('.ec-add,.ec-del,.row-del-wrap,.page-add-zone,.task-ctrl'));
       var saved = toRemove.map(function (n) { return { el: n, parent: n.parentNode, next: n.nextSibling }; });
       toRemove.forEach(function (n) { n.remove(); });
 
