@@ -241,9 +241,9 @@
   .when { font-size: 8.2pt; font-weight: 700; color: var(--green); line-height: 1.4; }
   .role { font-size: 10pt; font-weight: 700; color: var(--ink); line-height: 1.25; }
   .org { font-size: 8.8pt; color: var(--muted); margin-top: .7mm; line-height: 1.3; }
-  .tasks { columns: 1; list-style: none; margin: 2mm 0 0; padding: 0; }
+  .tasks { list-style: none; margin: 2mm 0 0; padding: 0; }
   .tasks li { font-size: 8.4pt; line-height: 1.35; color: var(--soft);
-    padding-left: 4mm; position: relative; margin-bottom: .8mm; break-inside: avoid; }
+    padding-left: 4mm; position: relative; margin-bottom: .8mm; }
   .tasks li::before { content: "\2022"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
   #cv-werdegang-rows, #cv-kenntnisse-rows { display: flex; flex-direction: column; }
   .cv-foot { margin-top: auto; padding-top: 3mm; border-top: 2px solid var(--ink);
@@ -726,7 +726,7 @@
 
     /* Aufgabenstichpunkte innerhalb einer Werdegang-Zeile */
     function refreshTaskControls(row) {
-      var inner = row.querySelector(':scope > div:last-of-type');
+      var inner = row.querySelector(':scope > div:not(.when):not(.row-del-wrap)');
       if (!inner) return;
 
       // Entferne alle vorherigen Task-Controls
