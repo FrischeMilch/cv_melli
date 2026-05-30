@@ -85,6 +85,13 @@
                     padding:2px 6px; pointer-events:none; opacity:0;
                     transition:opacity .2s; }
           :host(:hover) .badge { opacity:1; }
+          .change-btn { position:absolute; top:6px; right:6px;
+                    background:rgba(0,0,0,.55); color:#fff; border:none; border-radius:4px;
+                    font-family:system-ui,sans-serif; font-size:10px; font-weight:600;
+                    padding:4px 8px; cursor:pointer; opacity:0;
+                    transition:opacity .2s; z-index:2; }
+          .change-btn:hover { background:rgba(0,0,0,.75); }
+          :host(:hover) .change-btn.visible { opacity:1; }
         </style>
         <div class="bg">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
@@ -99,6 +106,7 @@
           <canvas></canvas>
         </div>
         <div class="handle"></div>
+        <button class="change-btn" type="button">📷 Ändern</button>
         <div class="badge">Doppelklick zum Ausrichten</div>`;
 
       this._bg     = shadow.querySelector('.bg');
@@ -107,6 +115,7 @@
       this._canvas = shadow.querySelector('canvas');
       this._handle = shadow.querySelector('.handle');
 
+      this._changeBtn = shadow.querySelector('.change-btn');
       this._ph.textContent = this.getAttribute('placeholder') || 'Drop image';
 
       this._bindEvents();
@@ -141,10 +150,12 @@
       if (!this._src) {
         this._imgDiv.hidden = true;
         this._bg.hidden = false;
+        this._changeBtn.classList.remove('visible');
         return;
       }
       this._bg.hidden = true;
       this._imgDiv.hidden = false;
+      this._changeBtn.classList.add('visible');
 
       const canvas  = this._canvas;
       const dpr     = window.devicePixelRatio || 1;
@@ -191,6 +202,12 @@
       handle.addEventListener('click', () => {
         if (this._adjusting) { this._adjusting = false; return; }
         if (!this._src) this._openPicker();
+      });
+
+      // ── change button ──
+      this._changeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        this._openPicker();
       });
 
       // ── double-click → adjust mode ──
