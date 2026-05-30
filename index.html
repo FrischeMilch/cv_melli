@@ -631,6 +631,7 @@
     }
 
     loadSaved();
+    sanitizeHTML(workspace);
 
     /* ============================================================
        Helpers
@@ -1180,18 +1181,40 @@
     var PUBLISH_BRANCH = 'main';
 
     function buildPublishHTML() {
+      sanitizeHTML(workspace);
+
       // Temporarily pull edit controls out of DOM so clone is clean
       var toRemove = Array.from(document.querySelectorAll('.ec-add,.ec-del,.row-del-wrap,.page-add-zone,.task-ctrl'));
       var saved = toRemove.map(function (n) { return { el: n, parent: n.parentNode, next: n.nextSibling }; });
       toRemove.forEach(function (n) { n.remove(); });
 
+      // Embed image data into image-slot elements before cloning
+      var imgStore = {};
+      try { imgStore = JSON.parse(localStorage.getItem('.image-slots.state.json') || '{}'); } catch (e) {}
+      document.querySelectorAll('image-slot[id]').forEach(function (slot) {
+        var state = imgStore[slot.id];
+        if (state && state.src) {
+          slot.setAttribute('data-state', JSON.stringify(state));
+        }
+      });
+
       var clone = document.documentElement.cloneNode(true);
+
+      // Remove data-state from live DOM (only needed in published HTML)
+      document.querySelectorAll('image-slot[data-state]').forEach(function (slot) {
+        slot.removeAttribute('data-state');
+      });
 
       // Restore controls to live DOM
       saved.forEach(function (s) { if (s.parent) s.parent.insertBefore(s.el, s.next); });
 
       // Clean clone
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
+      sanitizeHTML(clone);
+
+      // Remove body.editing class from clone
+      var cloneBody = clone.querySelector('body');
+      if (cloneBody) cloneBody.classList.remove('editing');
 
       // Reset overlay state
       var ov = clone.querySelector('#pw-overlay');
@@ -1233,51 +1256,61 @@
         if (editing) setEditing(false);
         var html = buildPublishHTML();
 
-        // UTF-8 → base64 (handles German umlauts)
-        var bytes = new TextEncoder().encode(html);
-        var binStr = Array.from(bytes, function (b) { return String.fromCharCode(b); }).join('');
-        var encoded = btoa(binStr);
-
-        var API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO +
-                  '/contents/' + PUBLISH_FILE;
+        var BASE_API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO + '/contents/';
         var GH_HEADERS = { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' };
 
-        async function getCurrentSha() {
-          var r = await fetch(API + '?ref=' + PUBLISH_BRANCH + '&t=' + Date.now(), { headers: GH_HEADERS });
+        function toBase64(str) {
+          var bytes = new TextEncoder().encode(str);
+          var binStr = Array.from(bytes, function (b) { return String.fromCharCode(b); }).join('');
+          return btoa(binStr);
+        }
+
+        async function getFileSha(filename) {
+          var r = await fetch(BASE_API + filename + '?ref=' + PUBLISH_BRANCH + '&t=' + Date.now(), { headers: GH_HEADERS });
           if (r.ok) return (await r.json()).sha;
           if (r.status === 401) { localStorage.removeItem('bw-gh-token'); throw new Error('Token ungültig oder abgelaufen. Bitte neu eingeben.'); }
           if (r.status === 404) return null;
           throw new Error('GitHub API Fehler beim Lesen: ' + r.status);
         }
 
-        async function doPut(sha) {
-          var body = {
-            message: 'Bewerbung aktualisiert (' + new Date().toLocaleDateString('de-DE') + ')',
-            content: encoded,
-            branch: PUBLISH_BRANCH
-          };
+        async function putFile(filename, content, message) {
+          var encoded = toBase64(content);
+          var sha = await getFileSha(filename);
+          var body = { message: message, content: encoded, branch: PUBLISH_BRANCH };
           if (sha) body.sha = sha;
-          return fetch(API, {
+          var r = await fetch(BASE_API + filename, {
             method: 'PUT',
             headers: Object.assign({ 'Content-Type': 'application/json' }, GH_HEADERS),
             body: JSON.stringify(body)
           });
+          if (r.status === 409) {
+            sha = await getFileSha(filename);
+            body.sha = sha;
+            r = await fetch(BASE_API + filename, {
+              method: 'PUT',
+              headers: Object.assign({ 'Content-Type': 'application/json' }, GH_HEADERS),
+              body: JSON.stringify(body)
+            });
+          }
+          if (!r.ok) {
+            var errData = await r.json().catch(function () { return {}; });
+            if (r.status === 401) localStorage.removeItem('bw-gh-token');
+            throw new Error(errData.message || 'HTTP ' + r.status);
+          }
+          return r;
         }
 
-        // Fetch fresh SHA, attempt PUT, retry once on conflict (409)
-        var sha = await getCurrentSha();
-        var r2 = await doPut(sha);
+        // Fetch image-slot.js source to publish alongside HTML
+        var jsSource = null;
+        try {
+          var jsResp = await fetch('image-slot.js?t=' + Date.now());
+          if (jsResp.ok) jsSource = await jsResp.text();
+        } catch (e) {}
 
-        if (r2.status === 409) {
-          // SHA stale — refetch and retry
-          sha = await getCurrentSha();
-          r2 = await doPut(sha);
-        }
-
-        if (!r2.ok) {
-          var errData = await r2.json().catch(function () { return {}; });
-          if (r2.status === 401) localStorage.removeItem('bw-gh-token');
-          throw new Error(errData.message || 'HTTP ' + r2.status);
+        var dateStr = new Date().toLocaleDateString('de-DE');
+        await putFile(PUBLISH_FILE, html, 'Bewerbung aktualisiert (' + dateStr + ')');
+        if (jsSource) {
+          await putFile('image-slot.js', jsSource, 'image-slot.js aktualisiert (' + dateStr + ')');
         }
 
         btn.textContent = '✓ Veröffentlicht!';
