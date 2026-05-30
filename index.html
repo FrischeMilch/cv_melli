@@ -1045,7 +1045,6 @@
       // Werdegang rows
       page.querySelectorAll('[id^="cv-werdegang"],[id^="wr-"]').forEach(function (c) {
         refreshRowControls(c, newWerdegangRow);
-        c.querySelectorAll(':scope > .row').forEach(refreshTaskControls);
       });
       // Kenntnisse rows
       page.querySelectorAll('[id^="cv-kenntnisse"]').forEach(function (c) {
