@@ -554,18 +554,38 @@
        ============================================================ */
     var STORE_KEY = 'bewerbung-v6';
     var workspace = document.getElementById('workspace');
+    var _id = Date.now();
 
     function sanitizeHTML(container) {
+      // Strip nested <p> inside [data-k] elements
       container.querySelectorAll('[data-k] p, h3[data-k] p').forEach(function (nested) {
         while (nested.firstChild) nested.parentNode.insertBefore(nested.firstChild, nested);
         nested.remove();
       });
+      // Strip empty styled spans
       container.querySelectorAll('[data-k] span[style]').forEach(function (s) {
         if (!s.textContent.trim()) s.remove();
       });
+      // Strip foreign CSS classes
       container.querySelectorAll('.font-claude-response-body').forEach(function (el) {
         el.className = el.className.replace(/font-claude-response-body|break-words|whitespace-normal|leading-\[[\d.]+\]/g, '').trim();
         if (!el.className) el.removeAttribute('class');
+      });
+
+      // Fix orphan <p> in letter containers: give them class="body" + data-k
+      container.querySelectorAll('[id^="letter-paras"],[id^="lp-"]').forEach(function (lc) {
+        lc.querySelectorAll(':scope > p').forEach(function (p) {
+          if (!p.classList.contains('body') && !p.classList.contains('l-salut')) {
+            p.classList.add('body');
+          }
+          if (!p.dataset.k) {
+            p.dataset.k = 'lp-' + (++_id);
+          }
+        });
+        // Remove empty data-k paragraphs (leftover from corruption)
+        lc.querySelectorAll(':scope > p[data-k]').forEach(function (p) {
+          if (!p.textContent.trim()) p.remove();
+        });
       });
     }
 
@@ -594,7 +614,6 @@
        Helpers
        ============================================================ */
     var editing = false;
-    var _id = Date.now();
     function uid() { return 'x' + (++_id); }
 
     function makeAddBtn(title, onClick) {
