@@ -600,8 +600,8 @@
     }
 
     function save() {
-      sanitizeHTML(workspace);
       var clone = workspace.cloneNode(true);
+      sanitizeHTML(clone);
       clone.querySelectorAll('.ec-add, .ec-del, .row-del-wrap, .page-add-zone, .task-ctrl').forEach(function (n) { n.remove(); });
       clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
       try { localStorage.setItem(STORE_KEY, JSON.stringify(clone.innerHTML)); } catch (e) {}
