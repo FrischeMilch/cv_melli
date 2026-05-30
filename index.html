@@ -744,6 +744,7 @@
         c.insertBefore(row, beforeEl);
         if (editing) setEditable(row, true);
         refreshRowControls(c, newRowFn); save();
+        // Task controls are wired inside refreshRowControls for werdegang rows
         focusEl(row.querySelector('[data-k]'));
       }
 
@@ -759,6 +760,11 @@
 
         var aAfter = makeAddBtn('Zeile unten', function () { insertRow(aAfter); });
         row.insertAdjacentElement('afterend', aAfter);
+
+        // Task controls for werdegang rows
+        if (newRowFn === newWerdegangRow || row.closest('[id^="cv-werdegang"],[id^="wr-"]')) {
+          refreshTaskControls(row);
+        }
       });
     }
 
@@ -768,6 +774,77 @@
         '<div><div class="role" data-k="r-' + id + '">Position / Tätigkeit</div>' +
         '<div class="org" data-k="o-' + id + '">Organisation, Ort</div></div>';
       return d;
+    }
+
+    /* Aufgabenstichpunkte innerhalb einer Werdegang-Zeile */
+    function refreshTaskControls(row) {
+      // Remove only task-related controls inside this row
+      row.querySelectorAll('.ec-add.task-add, .ec-del.task-del, .task-add-list-btn').forEach(function (n) { n.remove(); });
+
+      var inner = row.querySelector(':scope > div:last-child');
+      if (!inner) return;
+      var tasksList = inner.querySelector(':scope > .tasks');
+
+      if (!tasksList) {
+        // Show a button to add a task list
+        var addListBtn = document.createElement('button');
+        addListBtn.className = 'ec-del task-add-list-btn';
+        addListBtn.type = 'button';
+        addListBtn.innerHTML = '+ Aufgaben';
+        addListBtn.style.cssText = 'margin-top:2mm; border-color:rgba(46,125,80,.4); color:var(--green); background:rgba(46,125,80,.06);';
+        addListBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var ul = document.createElement('ul');
+          ul.className = 'tasks';
+          var li = document.createElement('li');
+          li.dataset.k = 'ti-' + uid();
+          if (editing) li.contentEditable = 'true';
+          li.textContent = 'Aufgabe …';
+          ul.appendChild(li);
+          inner.appendChild(ul);
+          refreshTaskControls(row); save(); focusEl(li);
+        });
+        inner.appendChild(addListBtn);
+        return;
+      }
+
+      // Wire add/del buttons for existing tasks list
+      var items = Array.from(tasksList.querySelectorAll(':scope > li'));
+
+      function insertTask(beforeEl) {
+        var li = document.createElement('li');
+        li.dataset.k = 'ti-' + uid();
+        if (editing) li.contentEditable = 'true';
+        li.textContent = 'Aufgabe …';
+        tasksList.insertBefore(li, beforeEl);
+        refreshTaskControls(row); save(); focusEl(li);
+      }
+
+      // Top add
+      var topAdd = document.createElement('button');
+      topAdd.className = 'ec-add task-add'; topAdd.type = 'button';
+      topAdd.innerHTML = '<span>+</span>';
+      topAdd.addEventListener('click', function (e) { e.stopPropagation(); insertTask(topAdd); });
+      tasksList.insertBefore(topAdd, tasksList.firstChild);
+
+      items.forEach(function (li) {
+        var del = document.createElement('button');
+        del.className = 'ec-del task-del'; del.type = 'button';
+        del.innerHTML = '× Aufgabe';
+        del.addEventListener('click', function (e) {
+          e.stopPropagation();
+          li.remove();
+          if (tasksList.querySelectorAll(':scope > li').length === 0) tasksList.remove();
+          refreshTaskControls(row); save();
+        });
+        li.insertAdjacentElement('afterend', del);
+
+        var aAfter = document.createElement('button');
+        aAfter.className = 'ec-add task-add'; aAfter.type = 'button';
+        aAfter.innerHTML = '<span>+</span>';
+        aAfter.addEventListener('click', function (e) { e.stopPropagation(); insertTask(aAfter); });
+        del.insertAdjacentElement('afterend', aAfter);
+      });
     }
     function newKenntnisseRow() {
       var id = uid(); var d = document.createElement('div'); d.className = 'row';
@@ -1020,6 +1097,7 @@
       // Werdegang rows
       page.querySelectorAll('[id^="cv-werdegang"],[id^="wr-"]').forEach(function (c) {
         refreshRowControls(c, newWerdegangRow);
+        c.querySelectorAll(':scope > .row').forEach(refreshTaskControls);
       });
       // Kenntnisse rows
       page.querySelectorAll('[id^="cv-kenntnisse"]').forEach(function (c) {
