@@ -291,26 +291,31 @@
   /* ---- Mobile ---- */
   @media (max-width: 700px) {
     :root { --page-w: 100%; --pad: 4vw; --gap: 3vw; }
-    html, body { overflow-x: hidden; }
-    .workspace { padding: 64px 0 32px; gap: 0; }
+
+    /* Prevent any horizontal overflow */
+    html, body { overflow-x: hidden; max-width: 100vw; }
+    * { max-width: 100%; box-sizing: border-box; }
+
+    .workspace { padding: 52px 0 32px; gap: 0; }
     .page-wrap { width: 100%; margin-bottom: 8px; }
     .page {
       width: 100% !important; min-height: unset !important; height: auto !important;
-      overflow: visible !important;
+      overflow: hidden !important;
       border-radius: 0; box-shadow: none;
-      padding: var(--pad);
+      padding: 4vw;
     }
 
-    /* Toolbar */
+    /* Toolbar: 2 rows so nothing clips */
     .toolbar {
       top: 0; left: 0; right: 0; transform: none;
       width: 100%; max-width: 100%;
-      overflow-x: auto; flex-wrap: nowrap;
-      padding: 6px 10px;
+      flex-wrap: wrap; gap: 4px;
+      padding: 6px 8px;
       border-radius: 0;
+      justify-content: flex-start;
     }
     .toolbar .tb-brand { display: none; }
-    .toolbar button { font-size: 11px; padding: 6px 10px; flex-shrink: 0; }
+    .toolbar button { font-size: 11px; padding: 5px 9px; flex-shrink: 0; }
 
     /* Password card */
     .pw-card { width: calc(100vw - 32px); max-width: 320px; padding: 24px 20px; }
@@ -319,38 +324,47 @@
     .editing-hint { font-size: 10px; left: 8px; right: 8px; transform: none;
       text-align: center; white-space: normal; width: auto; }
 
-    /* Deckblatt: stack grid vertically */
-    .cover-grid { grid-template-columns: 1fr !important; gap: 6vw; margin-top: 4vw; }
-    .cover-right { order: -1; display: grid; grid-template-columns: 40% 1fr; gap: 4vw; align-items: start; }
-    .who { margin-top: 0; }
-    .big { font-size: 22pt; margin-top: 3vw; }
-    .rule-row { margin-top: 2vw; }
+    /* Shared header */
     .hd-top { flex-direction: column; gap: 2vw; }
     .hd-addr { text-align: left; }
-    .cover-sub { font-size: 10pt; }
-    .inhalt li { font-size: 10pt; }
+
+    /* Titel */
+    .big { font-size: 20pt; margin-top: 3vw; }
+
+    /* rule-row: erlaubt Umbruch und kürzt ::before */
+    .rule-row { flex-wrap: wrap; margin-top: 2vw; gap: 2vw; }
+    .rule-row::before { width: 6mm; }
+    .rule-row .role { white-space: normal; font-size: 7.5pt; word-break: break-word; }
+    .rule-row::after { display: none; }
+
+    /* Deckblatt: grid vertikal gestapelt */
+    .cover-grid { grid-template-columns: 1fr !important; gap: 4vw; margin-top: 3vw; }
+    .cover-right { order: -1; display: grid; grid-template-columns: 38% 1fr; gap: 4vw; align-items: start; }
+    .who { margin-top: 0; }
+    .cover-sub { font-size: 9.5pt; }
+    .inhalt li { font-size: 9.5pt; }
+    .cover-period { font-size: 10pt; }
 
     /* Anschreiben */
     .l-addr { flex-direction: column; gap: 3vw; }
     .l-date { padding-top: 0; }
-    .l-subject { font-size: 12pt; }
+    .l-subject { font-size: 11pt; }
+    .letter p.body { font-size: 9pt; }
 
-    /* Lebenslauf: stack sidebar above main */
+    /* Lebenslauf: Sidebar über Hauptspalte */
     .cv-grid { grid-template-columns: 1fr !important; gap: 4vw; margin-top: 4vw; }
-    .side { display: grid !important; grid-template-columns: 35% 1fr; gap: 4vw; align-items: start; }
+    .side { display: grid !important; grid-template-columns: 36% 1fr; gap: 3vw; align-items: start; }
     .side-photo { margin-bottom: 0; }
-    .side .sec:first-of-type { grid-column: 1 / -1; display: none; }
     .row { grid-template-columns: 1fr; gap: 1vw; }
     .when { margin-bottom: 0; }
     .tasks { columns: 1; }
     .cv-foot { flex-direction: column; gap: 2vw; align-items: flex-start; }
 
-    /* Skills rows */
-    .row.skill-row { grid-template-columns: 1fr; }
-
-    /* General text sizing for readability */
-    .tag { font-size: 8pt; }
-    .h-big { font-size: 13pt; }
+    /* Text sizing */
+    .tag { font-size: 7.5pt; letter-spacing: .08em; }
+    .h-big { font-size: 12pt; }
+    .who-name { font-size: 13pt; }
+    .role { font-size: 9.5pt; }
   }
 
   /* ---- Print ---- */
