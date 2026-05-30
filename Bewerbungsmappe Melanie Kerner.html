@@ -285,6 +285,9 @@
   /* ---- Print ---- */
   @page { size: A4; margin: 0; }
   @media print {
+    /* Force alle Farben und Hintergründe zu drucken */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
     html, body { background: #fff; }
     .toolbar, .editing-hint, #pw-overlay { display: none !important; }
     .workspace { gap: 0; padding: 0; }
@@ -294,6 +297,19 @@
     .page:last-child { break-after: auto; }
     [data-k] { outline: none !important; background: none !important; }
     .page-ctrl-bar, .page-add-zone, .ec-add, .ec-del, .row-del-wrap { display: none !important; }
+
+    /* Explizite Farberhaltung für dekorierte Elemente */
+    .tag .sq { background: #2e7d50 !important; }
+    .blist li::before { background: #2e7d50 !important; }
+    .tasks li::before { color: #2e7d50 !important; }
+    .inhalt .num { color: #2e7d50 !important; }
+    .when { color: #2e7d50 !important; }
+    .s-k { color: #2e7d50 !important; }
+    .big .dot, .h-big .dot, .l-subject .dot, .l-sign .dot { color: #2e7d50 !important; }
+    .hd-addr .lab, .who-lines .lab { color: #2e7d50 !important; }
+    .rule-row::before, .rule-row::after { background: #1d1d1a !important; }
+    .cv-foot { border-top-color: #1d1d1a !important; }
+    .boxlabel { border-color: #1d1d1a !important; color: #1d1d1a !important; }
   }
 </style>
 </head>
@@ -968,6 +984,7 @@
     });
 
     // Wire existing page wraps (for delete + side toggle) on initial load
+    // (runs after loadSaved so restored HTML is also wired)
     getPageWraps().forEach(wirePageWrap);
 
   })();
