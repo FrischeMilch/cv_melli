@@ -241,11 +241,9 @@
   .when { font-size: 8.2pt; font-weight: 700; color: var(--green); line-height: 1.4; }
   .role { font-size: 10pt; font-weight: 700; color: var(--ink); line-height: 1.25; }
   .org { font-size: 8.8pt; color: var(--muted); margin-top: .7mm; line-height: 1.3; }
-  /* tasks: einspaltig, volle Zeilenbreite (überschreibt den Date-Spalten-Offset) */
-  .tasks { columns: 1; list-style: none; margin: 2.5mm 0 0; padding: 0;
-    margin-left: calc(-1 * (25mm + 5mm)); width: calc(100% + 25mm + 5mm); }
+  .tasks { columns: 1; list-style: none; margin: 2mm 0 0; padding: 0; }
   .tasks li { font-size: 8.4pt; line-height: 1.35; color: var(--soft);
-    padding-left: 4mm; position: relative; margin-bottom: 1mm; break-inside: avoid; }
+    padding-left: 4mm; position: relative; margin-bottom: .8mm; break-inside: avoid; }
   .tasks li::before { content: "\2022"; position: absolute; left: 0; color: var(--green); font-weight: 800; }
   #cv-werdegang-rows, #cv-kenntnisse-rows { display: flex; flex-direction: column; }
   .cv-foot { margin-top: auto; padding-top: 3mm; border-top: 2px solid var(--ink);
@@ -290,10 +288,8 @@
   .row-del-wrap { display: none; grid-column: 1 / -1; }
   body.editing .row-del-wrap { display: flex; padding-bottom: 2px; }
 
-  /* ---- Mobile: Seiten werden per JS auf Viewport skaliert ---- */
-  @media (max-width: 700px) {
-    html, body { overflow-x: hidden; }
-
+  /* ---- Mobile (viewport wird per JS auf 850px gesetzt) ---- */
+  @media (max-width: 850px) {
     /* Toolbar: volle Breite, umbrechen */
     .toolbar {
       top: 0; left: 0; right: 0; transform: none;
@@ -304,16 +300,13 @@
       justify-content: flex-start;
     }
     .toolbar .tb-brand { display: none; }
-    .toolbar button { font-size: 11px; padding: 5px 9px; flex-shrink: 0; }
+    .toolbar button { font-size: 12px; padding: 6px 11px; flex-shrink: 0; }
 
-    /* Workspace: Platz für Toolbar */
-    .workspace { padding-top: 62px; }
-
-    /* page-wrap: transform-origin für scale() */
-    .page-wrap { transform-origin: top left; align-items: flex-start; }
+    /* Workspace: Platz für Toolbar (2 Reihen ≈ 80px) */
+    .workspace { padding-top: 90px; }
 
     /* Passwort-Dialog */
-    .pw-card { width: calc(100vw - 32px); max-width: 320px; padding: 24px 20px; }
+    .pw-card { width: calc(100% - 32px); max-width: 340px; padding: 24px 20px; }
 
     /* Editing hint */
     .editing-hint {
@@ -1252,49 +1245,18 @@
 
   })();
 
-  /* ---- Mobile: Seiten proportional auf Viewport-Breite skalieren ---- */
+  /* ---- Mobile: viewport auf 850px setzen damit Browser nativ skaliert ---- */
   (function () {
-    var BREAKPOINT = 700;
-    var GUTTER = 12;
-
-    function scalePages() {
-      var wraps = document.querySelectorAll('.workspace > .page-wrap');
-      if (window.innerWidth > BREAKPOINT) {
-        wraps.forEach(function (w) {
-          w.style.transform = '';
-          w.style.marginBottom = '';
-          w.style.marginLeft = '';
-          w.style.width = '';
-        });
-        return;
+    var meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) return;
+    function applyViewport() {
+      if (window.screen.width < 850) {
+        meta.content = 'width=850, initial-scale=' + (window.screen.width / 850).toFixed(3);
+      } else {
+        meta.content = 'width=device-width, initial-scale=1.0';
       }
-      var available = window.innerWidth - GUTTER * 2;
-      wraps.forEach(function (wrap) {
-        var page = wrap.querySelector('.page');
-        if (!page) return;
-        // Kurz zurücksetzen, um natürliche Breite zu messen
-        wrap.style.transform = '';
-        wrap.style.width = '';
-        var naturalW = page.offsetWidth || 794;
-        var naturalH = wrap.offsetHeight;
-        var scale = available / naturalW;
-        wrap.style.width = naturalW + 'px';
-        wrap.style.transform = 'scale(' + scale + ')';
-        wrap.style.marginLeft = GUTTER + 'px';
-        // Höhe korrigieren damit Seiten nicht überlappen
-        wrap.style.marginBottom = Math.round(naturalH * scale - naturalH + 16) + 'px';
-      });
     }
-
-    function run() { scalePages(); setTimeout(scalePages, 200); }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', run);
-    } else {
-      run();
-    }
-    window.addEventListener('load', scalePages);
-    window.addEventListener('resize', scalePages);
+    applyViewport();
   })();
   </script>
 
