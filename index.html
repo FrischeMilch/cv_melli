@@ -289,7 +289,7 @@
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
     html, body { background: #fff; }
-    .toolbar, .editing-hint, #pw-overlay { display: none !important; }
+    .toolbar, .editing-hint, #pw-overlay, #btnPublish, #btnReset { display: none !important; }
     .workspace { gap: 0; padding: 0; }
     .page-wrap { margin-bottom: 0; }
     .page { box-shadow: none; break-after: page; height: var(--page-h) !important;
@@ -331,6 +331,7 @@
     <span class="tb-brand">Bewerbung</span>
     <button id="btnEdit">✎ Bearbeiten</button>
     <button id="btnReset" class="danger" title="Alle Änderungen zurücksetzen">↺ Reset</button>
+    <button id="btnPublish">↑ Veröffentlichen</button>
     <button id="btnPdf" class="primary">↓ Als PDF speichern</button>
   </div>
   <div class="editing-hint">Bearbeitungsmodus — Texte anklicken · + Zeilen/Absätze hinzufügen · × löschen</div>
@@ -421,7 +422,7 @@
           <h3 class="l-subject" data-k="l-subject">Bewerbung um eine Praktikumsstelle als Kauffrau für Büromanagement (IHK) — Praktikumszeitraum 18.01.2021 bis 14.07.2022</h3>
           <div id="letter-paras">
             <p class="body l-salut" data-k="l-salut">Sehr geehrter Herr Mack,</p>
-            <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herzstück" dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
+            <p class="body" data-k="l-p1">seit September 2019 befinde ich mich in einer Umschulungsmaßnahme der DEKRA Akademie GmbH, die mit der Abschlussprüfung der IHK endet. Die theoretischen Inhalte eigne ich mir auf Basis selbstgesteuerten Lernens und moderner Medien eigenständig an. Das betriebliche Praktikum ist das „Herz­stück“ dieser Ausbildung: Hier wende ich mein erlerntes Wissen in der Praxis an, lerne von erfahrenen Kolleginnen und Kollegen und kann die Mitarbeitenden bereits aktiv unterstützen.</p>
             <p class="body" data-k="l-p2">Den Beruf der Kauffrau für Büromanagement habe ich ganz bewusst gewählt. Als Quereinsteigerin war ich viele Jahre im stationären Einzelhandel der Bekleidungsbranche tätig. Als abteilungsverantwortliche Mitarbeiterin waren es gerade die administrativen Aufgaben, die ich mit besonderer Freude erledigt habe – sie haben meinen Wunsch nach einer Ausbildung in diesem Bereich geweckt. Eng mit der Gemeinde Weichering verbunden, interessiere ich mich seit Beginn meiner Umschulung dafür, mein Praktikum in der Gemeindeverwaltung zu absolvieren.</p>
             <p class="body" data-k="l-p3">Im Handel steht die Kundenorientierung an erster Stelle: Wünsche zu erfragen und zielorientiert zu beraten, gehört zu den Kernaufgaben. Kommunikationsfähigkeit und Arbeiten im Team sind für mich daher selbstverständlich. Eine dienstleistungsorientierte Grundeinstellung gegenüber den Bürgerinnen und Bürgern ist auch in einer modernen, zunehmend digitalen Gemeindeverwaltung hilfreich – der Servicegedanke sollte nach außen spürbar sein.</p>
             <p class="body" data-k="l-p4">Neuen Herausforderungen stehe ich sehr aufgeschlossen gegenüber. Neben der Kundenberatung verantwortete ich den Kassenbereich inklusive Abrechnung sowie den Tresor und konnte dabei genaues, sorgfältiges und verantwortungsvolles Arbeiten unter Beweis stellen. Aufgrund meiner Leistungen wurde mir für sechs Monate die kommissarische Leitung der Filiale übertragen.</p>
@@ -440,7 +441,7 @@
       <div class="page-ctrl-bar">
         <span class="page-label">Lebenslauf</span>
         <div class="ctrl-btns">
-          <button class="side-toggle-btn" data-target=".cv-grid">◧ Spalte ausblenden</button>
+          <button class="side-toggle-btn" data-target=".cv-grid">▧ Spalte ausblenden</button>
           <button class="page-del-btn">× Seite löschen</button>
         </div>
       </div>
@@ -540,9 +541,13 @@
         overlay.classList.add('hidden');
         pwError.classList.remove('show');
         pwInput.value = '';
-        // Merken für diese Session
         sessionStorage.setItem('bw-auth', '1');
-        setEditing(true);
+        if (sessionStorage.getItem('bw-pending-publish')) {
+          sessionStorage.removeItem('bw-pending-publish');
+          publishToGitHub();
+        } else {
+          setEditing(true);
+        }
       } else {
         pwError.classList.add('show');
         pwInput.focus();
@@ -753,7 +758,7 @@
         delBtn._wired = true;
         delBtn.addEventListener('click', function () {
           var lbl = (wrap.querySelector('.page-label') || {}).textContent || 'diese Seite';
-          if (!confirm('Seite „' + lbl + '" wirklich löschen?')) return;
+          if (!confirm('Seite „' + lbl + '“ wirklich löschen?')) return;
           wrap.remove(); rebuildAddZones(); save();
         });
       }
@@ -766,13 +771,13 @@
           var grid = page && page.querySelector('.cv-grid');
           if (!grid) return;
           var hidden = grid.classList.toggle('no-side');
-          sideBtn.textContent = hidden ? '◧ Spalte einblenden' : '◧ Spalte ausblenden';
+          sideBtn.textContent = hidden ? '▧ Spalte einblenden' : '▧ Spalte ausblenden';
           save();
         });
         // Restore label if already hidden
         var grid = wrap.querySelector('.cv-grid');
         if (grid && grid.classList.contains('no-side')) {
-          sideBtn.textContent = '◧ Spalte einblenden';
+          sideBtn.textContent = '▧ Spalte einblenden';
         }
       }
     }
@@ -857,7 +862,7 @@
         '<div class="page-ctrl-bar">' +
           '<span class="page-label">' + (labels[type] || 'Seite') + '</span>' +
           '<div class="ctrl-btns">' +
-          (hasSideToggle ? '<button class="side-toggle-btn">◧ Spalte ausblenden</button>' : '') +
+          (hasSideToggle ? '<button class="side-toggle-btn">▧ Spalte ausblenden</button>' : '') +
           '<button class="page-del-btn">× Seite löschen</button>' +
           '</div></div>' +
         '<section class="page" data-page-type="' + type + '"></section>';
@@ -992,6 +997,128 @@
     // Wire existing page wraps (for delete + side toggle) on initial load
     // (runs after loadSaved so restored HTML is also wired)
     getPageWraps().forEach(wirePageWrap);
+
+    /* ============================================================
+       GitHub Pages Publish
+       ============================================================ */
+    var PUBLISH_OWNER = 'FrischeMilch';
+    var PUBLISH_REPO  = 'cv_melli';
+    var PUBLISH_FILE  = 'index.html';
+    var PUBLISH_BRANCH = 'main';
+
+    function buildPublishHTML() {
+      // Temporarily pull edit controls out of DOM so clone is clean
+      var toRemove = Array.from(document.querySelectorAll('.ec-add,.ec-del,.row-del-wrap,.page-add-zone'));
+      var saved = toRemove.map(function (n) { return { el: n, parent: n.parentNode, next: n.nextSibling }; });
+      toRemove.forEach(function (n) { n.remove(); });
+
+      var clone = document.documentElement.cloneNode(true);
+
+      // Restore controls to live DOM
+      saved.forEach(function (s) { if (s.parent) s.parent.insertBefore(s.el, s.next); });
+
+      // Clean clone
+      clone.querySelectorAll('[contenteditable]').forEach(function (n) { n.removeAttribute('contenteditable'); });
+
+      // Reset overlay state
+      var ov = clone.querySelector('#pw-overlay');
+      if (ov) ov.classList.add('hidden');
+      var pwi = clone.querySelector('#pw-input');
+      if (pwi) pwi.value = '';
+      var pwe = clone.querySelector('#pw-error');
+      if (pwe) pwe.classList.remove('show');
+
+      // Publish button must not show "loading" state
+      var pb = clone.querySelector('#btnPublish');
+      if (pb) { pb.textContent = '↑ Veröffentlichen'; pb.disabled = false; pb.removeAttribute('style'); }
+
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    async function publishToGitHub() {
+      // Require auth
+      if (!sessionStorage.getItem('bw-auth')) {
+        overlay.classList.remove('hidden');
+        setTimeout(function () { pwInput.focus(); }, 50);
+        // Set a flag so after password success we trigger publish
+        sessionStorage.setItem('bw-pending-publish', '1');
+        return;
+      }
+
+      var pat = localStorage.getItem('bw-gh-token');
+      if (!pat) {
+        pat = prompt('GitHub Personal Access Token eingeben:\n(wird nur lokal gespeichert, nie hochgeladen)');
+        if (!pat) return;
+        localStorage.setItem('bw-gh-token', pat.trim());
+        pat = pat.trim();
+      }
+
+      var btn = document.getElementById('btnPublish');
+      btn.textContent = '⏳ Wird hochgeladen…';
+      btn.disabled = true;
+
+      try {
+        if (editing) setEditing(false);
+        var html = buildPublishHTML();
+        var API = 'https://api.github.com/repos/' + PUBLISH_OWNER + '/' + PUBLISH_REPO +
+                  '/contents/' + PUBLISH_FILE;
+
+        // Get current SHA (file may not exist yet)
+        var r1 = await fetch(API + '?ref=' + PUBLISH_BRANCH, {
+          headers: { 'Authorization': 'Bearer ' + pat, 'Accept': 'application/vnd.github+json' }
+        });
+        var sha = null;
+        if (r1.ok) {
+          sha = (await r1.json()).sha;
+        } else if (r1.status === 401) {
+          localStorage.removeItem('bw-gh-token');
+          throw new Error('Token ungültig oder abgelaufen. Bitte neu eingeben.');
+        } else if (r1.status !== 404) {
+          throw new Error('GitHub API Fehler: ' + r1.status);
+        }
+
+        // UTF-8 → base64 (handles German umlauts)
+        var encoded = btoa(unescape(encodeURIComponent(html)));
+
+        var body = {
+          message: 'Bewerbung aktualisiert (' + new Date().toLocaleDateString('de-DE') + ')',
+          content: encoded,
+          branch: PUBLISH_BRANCH
+        };
+        if (sha) body.sha = sha;
+
+        var r2 = await fetch(API, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + pat,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!r2.ok) {
+          var errData = await r2.json();
+          if (r2.status === 401) localStorage.removeItem('bw-gh-token');
+          throw new Error(errData.message || 'HTTP ' + r2.status);
+        }
+
+        btn.textContent = '✓ Veröffentlicht!';
+        btn.style.cssText = 'background:var(--green);color:#fff;border-color:var(--green)';
+        setTimeout(function () {
+          btn.textContent = '↑ Veröffentlichen';
+          btn.disabled = false;
+          btn.style.cssText = '';
+        }, 4000);
+
+      } catch (e) {
+        alert('Fehler beim Veröffentlichen:\n' + e.message);
+        btn.textContent = '↑ Veröffentlichen';
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('btnPublish').addEventListener('click', publishToGitHub);
 
   })();
   </script>
