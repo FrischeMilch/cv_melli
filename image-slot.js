@@ -28,7 +28,11 @@
     try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch { return {}; }
   }
   function saveStore (store) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch {}
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    } catch (e) {
+      console.warn('[image-slot] Bilddaten konnten nicht gespeichert werden (localStorage voll?):', e.message);
+    }
   }
 
   // ─── helpers ────────────────────────────────────────────────────────────────
@@ -128,18 +132,24 @@
 
     // ── restore from storage ───────────────────────────────────────────────────
     _restore () {
-      // 1. localStorage has highest priority (user's latest edits on this device)
+      const pubMeta = document.querySelector('meta[name="publish-date"]');
+      const curPub  = pubMeta ? parseInt(pubMeta.getAttribute('content'), 10) || 0 : 0;
+
+      // 1. localStorage — highest priority for user-uploaded images
       const store = loadStore();
       const s = store[this.slotId];
       if (s && s.src) {
-        this._src  = s.src;
-        this._zoom = s.zoom ?? 1;
-        this._ox   = s.ox   ?? 0.5;
-        this._oy   = s.oy   ?? 0.5;
-        this._render();
-        return;
+        // Use localStorage if: user-uploaded (no .pub), OR from same/newer publish
+        if (!s.pub || !curPub || s.pub >= curPub) {
+          this._src  = s.src;
+          this._zoom = s.zoom ?? 1;
+          this._ox   = s.ox   ?? 0.5;
+          this._oy   = s.oy   ?? 0.5;
+          this._render();
+          return;
+        }
       }
-      // 2. Check embedded image data (published HTML — fallback for new devices)
+      // 2. Embedded image data (published HTML)
       const embedded = document.getElementById('embedded-images');
       if (embedded) {
         try {
@@ -151,11 +161,12 @@
             this._ox   = e.ox   ?? 0.5;
             this._oy   = e.oy   ?? 0.5;
             this._render();
+            this._persist(curPub);
             return;
           }
         } catch {}
       }
-      // 3. Check data-state attribute (fallback for new devices)
+      // 3. data-state attribute (published HTML)
       const attr = this.getAttribute('data-state');
       if (attr) {
         try {
@@ -166,16 +177,19 @@
             this._ox   = a.ox   ?? 0.5;
             this._oy   = a.oy   ?? 0.5;
             this._render();
+            this._persist(curPub);
             return;
           }
         } catch {}
       }
     }
 
-    _persist () {
+    _persist (fromPublish) {
       if (!this.slotId) return;
       const store = loadStore();
-      store[this.slotId] = { src: this._src, zoom: this._zoom, ox: this._ox, oy: this._oy };
+      const entry = { src: this._src, zoom: this._zoom, ox: this._ox, oy: this._oy };
+      if (fromPublish) entry.pub = fromPublish;
+      store[this.slotId] = entry;
       saveStore(store);
     }
 
