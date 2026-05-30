@@ -128,19 +128,40 @@
 
     // ── restore from storage ───────────────────────────────────────────────────
     _restore () {
+      // 1. Check embedded image data (from published HTML — always freshest cross-device)
+      const embedded = document.getElementById('embedded-images');
+      if (embedded) {
+        try {
+          const all = JSON.parse(embedded.textContent);
+          const e = all[this.slotId];
+          if (e && e.src) {
+            this._src  = e.src;
+            this._zoom = e.zoom ?? 1;
+            this._ox   = e.ox   ?? 0.5;
+            this._oy   = e.oy   ?? 0.5;
+            this._render();
+            this._persist();
+            return;
+          }
+        } catch {}
+      }
+      // 2. Check data-state attribute (legacy)
       const attr = this.getAttribute('data-state');
       if (attr) {
         try {
           const a = JSON.parse(attr);
-          this._src  = a.src;
-          this._zoom = a.zoom ?? 1;
-          this._ox   = a.ox   ?? 0.5;
-          this._oy   = a.oy   ?? 0.5;
-          this._render();
-          this._persist();
-          return;
+          if (a.src) {
+            this._src  = a.src;
+            this._zoom = a.zoom ?? 1;
+            this._ox   = a.ox   ?? 0.5;
+            this._oy   = a.oy   ?? 0.5;
+            this._render();
+            this._persist();
+            return;
+          }
         } catch {}
       }
+      // 3. Fallback to localStorage
       const store = loadStore();
       const s = store[this.slotId];
       if (!s) return;
